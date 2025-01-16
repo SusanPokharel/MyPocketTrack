@@ -56,9 +56,9 @@
         <MudGrid>
             <MudItem xs="12" md="3">
                 <MudSelect T="string" Label="Transaction Type" @bind-Value="FilterType">
-                    <MudSelectItem Value="@(Models.TransactionType.Inflow.ToString())">Inflow</MudSelectItem>
-                    <MudSelectItem Value="@(Models.TransactionType.Outflow.ToString())">Outflow</MudSelectItem>
-                    <MudSelectItem Value="@("Debt")">Debt</MudSelectItem>
+                    <MudSelectItem Value="@(Models.TransactionsStatus.Inflow.ToString())">Inflow</MudSelectItem>
+                    <MudSelectItem Value="@(Models.TransactionsStatus.Outflow.ToString())">Outflow</MudSelectItem>
+                    <MudSelectItem Value="@(Models.TransactionsStatus.Debt.ToString())">Debt</MudSelectItem>
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="3">
@@ -94,10 +94,6 @@
                 <MudTh>Type</MudTh>
                 <MudTh>Date</MudTh>
                 <MudTh>Tags</MudTh>
-                @if (FilteredTransactions.Any(t => t.IsDebt))
-                {
-                    <MudTh>Debt Status</MudTh>
-                }
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.Amount.ToString("C")</MudTd>
@@ -106,10 +102,6 @@
                 <MudTd>@context.Type</MudTd>
                 <MudTd>@context.Date.ToShortDateString()</MudTd>
                 <MudTd>@string.Join(", ", context.Tags)</MudTd>
-                @if (context.IsDebt)
-                {
-                    <MudTd>@context.DebtStatus</MudTd>
-                }
             </RowTemplate>
         </MudTable>
     </MudPaper>

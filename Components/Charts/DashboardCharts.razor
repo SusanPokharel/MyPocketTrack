@@ -78,12 +78,12 @@
             .ToList();
 
         var inflowData = dates.Select(date => 
-                Transactions.Where(t => t.Date.Date == date && t.Type == TransactionType.Inflow)
+                Transactions.Where(t => t.Date.Date == date && t.Type == TransactionsStatus.Inflow)
                     .Sum(t => t.Amount))
             .ToArray();
 
         var outflowData = dates.Select(date => 
-                Transactions.Where(t => t.Date.Date == date && t.Type == TransactionType.Outflow)
+                Transactions.Where(t => t.Date.Date == date && t.Type == TransactionsStatus.Outflow)
                     .Sum(t => t.Amount))
             .ToArray();
 
@@ -113,7 +113,7 @@
 
     private List<ChartSeries> GetDebtStatusSeries()
     {
-        var statuses = Enum.GetValues(typeof(DebtStatus)).Cast<DebtStatus>();
+        var statuses = Enum.GetValues(typeof(DebtsStatus)).Cast<DebtsStatus>();
         return statuses.Select(status =>
             new ChartSeries
             {
@@ -137,7 +137,7 @@
 
     private double[] GetCategorySpendingData()
     {
-        return Transactions.Where(t => t.Type == TransactionType.Outflow)
+        return Transactions.Where(t => t.Type == TransactionsStatus.Outflow)
                           .GroupBy(t => t.Tags.FirstOrDefault() ?? "Uncategorized")
                           .OrderByDescending(g => g.Sum(t => t.Amount))
                           .Select(g => (double)g.Sum(t => t.Amount))
@@ -146,7 +146,7 @@
 
     private string[] GetCategoryLabels()
     {
-        return Transactions.Where(t => t.Type == TransactionType.Outflow)
+        return Transactions.Where(t => t.Type == TransactionsStatus.Outflow)
                           .SelectMany(t => t.Tags)
                           .Distinct()
                           .OrderByDescending(t => 
@@ -162,10 +162,10 @@
             .ThenBy(g => g.Key.Month)
             .Select(g => new
             {
-                Inflow = g.Where(t => t.Type == TransactionType.Inflow).Sum(t => t.Amount),
-                Outflow = g.Where(t => t.Type == TransactionType.Outflow).Sum(t => t.Amount),
-                Balance = g.Where(t => t.Type == TransactionType.Inflow).Sum(t => t.Amount) -
-                          g.Where(t => t.Type == TransactionType.Outflow).Sum(t => t.Amount)
+                Inflow = g.Where(t => t.Type == TransactionsStatus.Inflow).Sum(t => t.Amount),
+                Outflow = g.Where(t => t.Type == TransactionsStatus.Outflow).Sum(t => t.Amount),
+                Balance = g.Where(t => t.Type == TransactionsStatus.Inflow).Sum(t => t.Amount) -
+                          g.Where(t => t.Type == TransactionsStatus.Outflow).Sum(t => t.Amount)
             }).ToList();
 
         return new List<ChartSeries>

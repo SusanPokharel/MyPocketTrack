@@ -1,9 +1,8 @@
 ﻿@page "/debt"
 @using System.Linq
-
-<MudThemeProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+@using Components.Models
+@using MyPocketTrack.Components.Services
+@inject TransactionService TransactionService
 
 <div class="container-fluid p-4">
     <div class="row">
@@ -12,7 +11,7 @@
             <div class="card shadow text-center" style="background: linear-gradient(135deg, #f7971e, #ffd200); color: white;">
                 <div class="card-body">
                     <h5 class="card-title">Remaining Debt</h5>
-                    <p class="card-text display-6">@remainingDebt</p>
+                    <p class="card-text display-6">@remainingDebt.ToString("C")</p>
                 </div>
             </div>
         </div>
@@ -20,7 +19,7 @@
             <div class="card shadow text-center" style="background: linear-gradient(135deg, #00c6ff, #0072ff); color: white;">
                 <div class="card-body">
                     <h5 class="card-title">Total Debt</h5>
-                    <p class="card-text display-6">@totalDebt</p>
+                    <p class="card-text display-6">@totalDebt.ToString("C")</p>
                 </div>
             </div>
         </div>
@@ -46,11 +45,11 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="3">
-                <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange" />
+                <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange"/>
             </MudItem>
             <MudItem xs="12" md="3">
                 <MudTextField @bind-Value="SearchText" Label="Search" Adornment="Adornment.Start"
-                             AdornmentIcon="@Icons.Material.Filled.Search" />
+                              AdornmentIcon="@Icons.Material.Filled.Search"/>
             </MudItem>
         </MudGrid>
     </MudPaper>
@@ -60,7 +59,7 @@
         <MudTable Items="@FilteredDebts" Dense="true" Hover="true" Bordered="true" Striped="true">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Debt Transactions</MudText>
-                <MudSpacer />
+                <MudSpacer/>
                 <MudButton Color="Color.Primary" OnClick="ClearFilters">Clear Filters</MudButton>
             </ToolBarContent>
             <HeaderContent>
@@ -76,24 +75,25 @@
                 <MudTd DataLabel="Amount">@context.Amount.ToString("C")</MudTd>
                 <MudTd DataLabel="Source">@context.Source</MudTd>
                 <MudTd DataLabel="Description">@context.Description</MudTd>
-                <MudTd DataLabel="Debt Taken Date">@context.DebtTakenDate?.ToShortDateString()</MudTd>
-                <MudTd DataLabel="Debt Due Date">@context.DebtDueDate?.ToShortDateString()</MudTd>
-                <MudTd DataLabel="Debt Paid Date">@context.DebtPaidDate?.ToShortDateString()</MudTd>
+                <MudTd DataLabel="Debt Taken Date">@context.DebtTakenDate</MudTd>
+                <MudTd DataLabel="Debt Due Date">@context.DebtDueDate</MudTd>
+                <MudTd DataLabel="Debt Paid Date">@context.DebtPaidDate</MudTd>
                 <MudTd DataLabel="Status">
-                    <MudChip T="string" Text="@context.DebtStatus.ToString()"
-                             Color="@(GetDebtStatusColor(context.DebtStatus))" />
+                    <MudChip T="string"
+                             Text="@GetDebtStatusText(context.DebtStatus)"
+                             Color="@GetDebtStatusColor(context.DebtStatus)"/>
                 </MudTd>
             </RowTemplate>
             <PagerContent>
-                <MudTablePager />
+                <MudTablePager/>
             </PagerContent>
         </MudTable>
     </MudPaper>
 </div>
 
 @code {
-    private List<Transaction> transactions = new(); // Load transactions dynamically
-    private List<Transaction> PendingDebts => transactions.Where(t => t.IsDebt && t.DebtStatus == DebtStatus.Pending).ToList();
+    private List<Transaction> transactions = new(); // Load transactions dynamically from the backend
+    private List<Transaction> PendingDebts => transactions.Where(t => t.Type == TransactionsStatus.Debt && t.DebtStatus == DebtsStatus.Pending).ToList();
 
     private string FilterTag { get; set; } = string.Empty;
     private string SearchText { get; set; } = string.Empty;
@@ -113,25 +113,38 @@
         "Entertainment"
     };
 
-    protected override void OnInitialized()
+    protected override Task OnInitializedAsync()
     {
-        totalDebt = transactions.Where(t => t.IsDebt).Sum(t => t.Amount);
-        remainingDebt = transactions.Where(t => t.IsDebt && t.DebtStatus == DebtStatus.Pending).Sum(t => t.Amount);
+        transactions = TransactionService.GetTransactions().ToList();
+
+        totalDebt = transactions.Where(t => t.Type == TransactionsStatus.Debt).Sum(t => t.Amount);
+        remainingDebt = transactions.Where(t => t.Type == TransactionsStatus.Debt && t.DebtStatus == DebtsStatus.Pending).Sum(t => t.Amount);
+
+        return Task.CompletedTask;
     }
 
     private IEnumerable<Transaction> FilteredDebts =>
         transactions.Where(t =>
-            t.IsDebt &&
+            t.Type == TransactionsStatus.Debt &&
             (string.IsNullOrEmpty(FilterTag) || t.Tags.Contains(FilterTag)) &&
+            (string.IsNullOrEmpty(SearchText) || t.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) &&
             (!_dateRange.Start.HasValue || t.Date >= _dateRange.Start.Value) &&
             (!_dateRange.End.HasValue || t.Date <= _dateRange.End.Value));
-
-    private Color GetDebtStatusColor(DebtStatus? status) =>
+    
+    private Color GetDebtStatusColor(DebtsStatus? status) =>
         status switch
         {
-            DebtStatus.Paid => Color.Success,
-            DebtStatus.Overdue => Color.Error,
+            DebtsStatus.Paid => Color.Success,
+            DebtsStatus.Overdue => Color.Error,
             _ => Color.Warning
+        };
+
+    private string GetDebtStatusText(DebtsStatus? status) =>
+        status switch
+        {
+            DebtsStatus.Paid => "Paid",
+            DebtsStatus.Overdue => "Overdue",
+            _ => "Pending"
         };
 
     private void ClearFilters()
@@ -142,24 +155,149 @@
         StateHasChanged();
     }
 
-    private class Transaction
-    {
-        public decimal Amount { get; set; }
-        public string Source { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public DateTime Date { get; set; }
-        public bool IsDebt { get; set; }
-        public DebtStatus? DebtStatus { get; set; }
-        public DateTime? DebtTakenDate { get; set; }
-        public DateTime? DebtDueDate { get; set; }
-        public DateTime? DebtPaidDate { get; set; }
-        public List<string> Tags { get; set; } = new();
-    }
-
-    private enum DebtStatus
-    {
-        Pending,
-        Paid,
-        Overdue
-    }
 }
+
+
+
+@* *@
+@* <MudThemeProvider /> *@
+@* <MudDialogProvider /> *@
+@* <MudSnackbarProvider /> *@
+@* *@
+@* <div class="container-fluid p-4"> *@
+@*     <div class="row"> *@
+@*         <!-- Summary Cards --> *@
+@*         <div class="col-12 col-md-4 mb-4"> *@
+@*             <div class="card shadow text-center" style="background: linear-gradient(135deg, #f7971e, #ffd200); color: white;"> *@
+@*                 <div class="card-body"> *@
+@*                     <h5 class="card-title">Remaining Debt</h5> *@
+@*                     <p class="card-text display-6">@remainingDebt</p> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+@*         <div class="col-12 col-md-4 mb-4"> *@
+@*             <div class="card shadow text-center" style="background: linear-gradient(135deg, #00c6ff, #0072ff); color: white;"> *@
+@*                 <div class="card-body"> *@
+@*                     <h5 class="card-title">Total Debt</h5> *@
+@*                     <p class="card-text display-6">@totalDebt</p> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+@*         <div class="col-12 col-md-4 mb-4"> *@
+@*             <div class="card shadow text-center" style="background: linear-gradient(135deg, #a770ef, #cf8bf3); color: white;"> *@
+@*                 <div class="card-body"> *@
+@*                     <h5 class="card-title">Pending Debts</h5> *@
+@*                     <p class="card-text display-6">@PendingDebts.Count</p> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@* *@
+@*     <!-- Filters --> *@
+@*     <MudPaper Elevation="3" Class="p-4 mb-4"> *@
+@*         <MudGrid> *@
+@*             <MudItem xs="12" md="3"> *@
+@*                 <MudSelect T="string" Label="Tags" @bind-Value="FilterTag"> *@
+@*                     @foreach (var tag in PredefinedTags) *@
+@*                     { *@
+@*                         <MudSelectItem Value="@tag">@tag</MudSelectItem> *@
+@*                     } *@
+@*                 </MudSelect> *@
+@*             </MudItem> *@
+@*             <MudItem xs="12" md="3"> *@
+@*                 <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange" /> *@
+@*             </MudItem> *@
+@*             <MudItem xs="12" md="3"> *@
+@*                 <MudTextField @bind-Value="SearchText" Label="Search" Adornment="Adornment.Start" *@
+@*                              AdornmentIcon="@Icons.Material.Filled.Search" /> *@
+@*             </MudItem> *@
+@*         </MudGrid> *@
+@*     </MudPaper> *@
+@* *@
+@*     <!-- Debt Transactions Table --> *@
+@*     <MudPaper Elevation="3" Class="p-4"> *@
+@*         <MudTable Items="@FilteredDebts" Dense="true" Hover="true" Bordered="true" Striped="true"> *@
+@*             <ToolBarContent> *@
+@*                 <MudText Typo="Typo.h6">Debt Transactions</MudText> *@
+@*                 <MudSpacer /> *@
+@*                 <MudButton Color="Color.Primary" OnClick="ClearFilters">Clear Filters</MudButton> *@
+@*             </ToolBarContent> *@
+@*             <HeaderContent> *@
+@*                 <MudTh>Amount</MudTh> *@
+@*                 <MudTh>Source</MudTh> *@
+@*                 <MudTh>Description</MudTh> *@
+@*                 <MudTh>Debt Taken Date</MudTh> *@
+@*                 <MudTh>Debt Due Date</MudTh> *@
+@*                 <MudTh>Debt Paid Date</MudTh> *@
+@*                 <MudTh>Status</MudTh> *@
+@*             </HeaderContent> *@
+@*             <RowTemplate> *@
+@*                 <MudTd DataLabel="Amount">@context.Amount.ToString("C")</MudTd> *@
+@*                 <MudTd DataLabel="Source">@context.Source</MudTd> *@
+@*                 <MudTd DataLabel="Description">@context.Description</MudTd> *@
+@*                 <MudTd DataLabel="Debt Taken Date">@context.DebtTakenDate?.ToShortDateString()</MudTd> *@
+@*                 <MudTd DataLabel="Debt Due Date">@context.DebtDueDate?.ToShortDateString()</MudTd> *@
+@*                 <MudTd DataLabel="Debt Paid Date">@context.DebtPaidDate?.ToShortDateString()</MudTd> *@
+@*                 <MudTd DataLabel="Status"> *@
+@*                     <MudChip T="string" Text="@context.DebtStatus.ToString()" *@
+@*                              Color="@(GetDebtStatusColor(context.DebtStatus))" /> *@
+@*                 </MudTd> *@
+@*             </RowTemplate> *@
+@*             <PagerContent> *@
+@*                 <MudTablePager /> *@
+@*             </PagerContent> *@
+@*         </MudTable> *@
+@*     </MudPaper> *@
+@* </div> *@
+@* *@
+@* @code { *@
+@*     private List<Transaction> transactions = new(); // Load transactions dynamically *@
+@*     private List<Transaction> PendingDebts => transactions.Where(t => t.IsDebt && t.DebtStatus == DebtStatus.Pending).ToList(); *@
+@* *@
+@*     private string FilterTag { get; set; } = string.Empty; *@
+@*     private string SearchText { get; set; } = string.Empty; *@
+@*     private DateRange _dateRange = new(); *@
+@* *@
+@*     private decimal totalDebt; *@
+@*     private decimal remainingDebt; *@
+@* *@
+@*     private readonly string[] PredefinedTags = new[] *@
+@*     { *@
+@*         "Income", *@
+@*         "Housing", *@
+@*         "Food", *@
+@*         "Savings", *@
+@*         "Shopping", *@
+@*         "Bills", *@
+@*         "Entertainment" *@
+@*     }; *@
+@* *@
+@*     protected override void OnInitialized() *@
+@*     { *@
+@*         totalDebt = transactions.Where(t => t.IsDebt).Sum(t => t.Amount); *@
+@*         remainingDebt = transactions.Where(t => t.IsDebt && t.DebtStatus == DebtStatus.Pending).Sum(t => t.Amount); *@
+@*     } *@
+@* *@
+@*     private IEnumerable<Models.Transaction> FilteredDebts => *@
+@*         transactions.Where(t => *@
+@*             t.IsDebt && *@
+@*             (string.IsNullOrEmpty(FilterTag) || t.Tags.Contains(FilterTag)) && *@
+@*             (!_dateRange.Start.HasValue || t.Date >= _dateRange.Start.Value) && *@
+@*             (!_dateRange.End.HasValue || t.Date <= _dateRange.End.Value)); *@
+@* *@
+@*     private Color GetDebtStatusColor(DebtStatus? status) => *@
+@*         status switch *@
+@*         { *@
+@*             DebtStatus.Paid => Color.Success, *@
+@*             DebtStatus.Overdue => Color.Error, *@
+@*             _ => Color.Warning *@
+@*         }; *@
+@* *@
+@*     private void ClearFilters() *@
+@*     { *@
+@*         FilterTag = string.Empty; *@
+@*         SearchText = string.Empty; *@
+@*         _dateRange = new DateRange(); *@
+@*         StateHasChanged(); *@
+@*     } *@
+@* } *@
