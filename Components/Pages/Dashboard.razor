@@ -57,7 +57,7 @@
             <div class="card shadow text-center" style="background: linear-gradient(135deg, #a770ef, #cf8bf3); color: white;">
                 <div class="card-body">
                     <h5 class="card-title">Pending Debts</h5>
-                    <p class="card-text display-6">@transactions.Count(t => t.IsDebt && t.DebtStatus == DebtStatus.Pending)</p>
+                    <p class="card-text display-6">@transactions.Count(t => t.IsDebt && t.DebtStatus == DebtsStatus.Pending)</p>
                 </div>
             </div>
         </div>
@@ -147,23 +147,23 @@
 
     private List<Transaction> transactions = new()
     {
-        new Transaction { Amount = 3000, Source = "Company", Description = "Salary", Type = TransactionType.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = false },
-        new Transaction { Amount = 1200, Source = "Landlord", Description = "Rent", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Monthly rent", Tags = new List<string> { "Housing" }, IsDebt = false },
-        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Weekly groceries", Tags = new List<string> { "Food" }, IsDebt = false },
-        new Transaction { Amount = 500, Source = "Freelancer", Description = "Freelance Project", Type = TransactionType.Inflow, Date = DateTime.Now, Notes = "Freelance work", Tags = new List<string> { "Extra Income" }, IsDebt = false },
-        new Transaction { Amount = 200, Source = "Utility Company", Description = "Utilities", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Electricity bill", Tags = new List<string> { "Bills" }, IsDebt = false },
+        new Transaction { Amount = 3000, Source = "Company", Description = "Salary", Type = TransactionsStatus.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = false },
+        new Transaction { Amount = 1200, Source = "Landlord", Description = "Rent", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Monthly rent", Tags = new List<string> { "Housing" }, IsDebt = false },
+        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Weekly groceries", Tags = new List<string> { "Food" }, IsDebt = false },
+        new Transaction { Amount = 500, Source = "Freelancer", Description = "Freelance Project", Type = TransactionsStatus.Inflow, Date = DateTime.Now, Notes = "Freelance work", Tags = new List<string> { "Extra Income" }, IsDebt = false },
+        new Transaction { Amount = 200, Source = "Utility Company", Description = "Utilities", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Electricity bill", Tags = new List<string> { "Bills" }, IsDebt = false },
 
-        new Transaction { Amount = 1500, Source = "Himalayan Bank", Description = "Education Loan", Type = TransactionType.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-6), DebtDueDate = DateTime.Now.AddMonths(6) },
-        new Transaction { Amount = 1200, Source = "Landlord", Description = "Unpaid Rent", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending for last month", Tags = new List<string> { "Housing" }, IsDebt = true, DebtStatus = DebtStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-2), DebtDueDate = DateTime.Now.AddMonths(-1) },
-        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries on Credit", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending payment", Tags = new List<string> { "Food" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddDays(-15), DebtDueDate = DateTime.Now.AddDays(15) },
-        new Transaction { Amount = 2000, Source = "Credit Card Company", Description = "Credit Card Bill", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Overdue payment", Tags = new List<string> { "Bills" }, IsDebt = true, DebtStatus = DebtStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-3), DebtDueDate = DateTime.Now.AddMonths(-2) },
-        new Transaction { Amount = 800, Source = "Bank Loan", Description = "Car Loan Installment", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending car loan installment", Tags = new List<string> { "Vehicle" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-1), DebtDueDate = DateTime.Now.AddMonths(1) },
+        new Transaction { Amount = 1500, Source = "Himalayan Bank", Description = "Education Loan", Type = TransactionsStatus.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = true, DebtStatus = DebtsStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-6), DebtDueDate = DateTime.Now.AddMonths(6) },
+        new Transaction { Amount = 1200, Source = "Landlord", Description = "Unpaid Rent", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Pending for last month", Tags = new List<string> { "Housing" }, IsDebt = true, DebtStatus = DebtsStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-2), DebtDueDate = DateTime.Now.AddMonths(-1) },
+        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries on Credit", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Pending payment", Tags = new List<string> { "Food" }, IsDebt = true, DebtStatus = DebtsStatus.Pending, DebtTakenDate = DateTime.Now.AddDays(-15), DebtDueDate = DateTime.Now.AddDays(15) },
+        new Transaction { Amount = 2000, Source = "Credit Card Company", Description = "Credit Card Bill", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Overdue payment", Tags = new List<string> { "Bills" }, IsDebt = true, DebtStatus = DebtsStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-3), DebtDueDate = DateTime.Now.AddMonths(-2) },
+        new Transaction { Amount = 800, Source = "Bank Loan", Description = "Car Loan Installment", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Pending car loan installment", Tags = new List<string> { "Vehicle" }, IsDebt = true, DebtStatus = DebtsStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-1), DebtDueDate = DateTime.Now.AddMonths(1) },
         
-        new Transaction { Amount = 1500, Source = "Himalayan Bank", Description = "Education Loan", Type = TransactionType.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-6), DebtDueDate = DateTime.Now.AddMonths(6) },
-        new Transaction { Amount = 1200, Source = "Landlord", Description = "Unpaid Rent", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending for last month", Tags = new List<string> { "Housing" }, IsDebt = true, DebtStatus = DebtStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-2), DebtDueDate = DateTime.Now.AddMonths(-1) },
-        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries on Credit", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending payment", Tags = new List<string> { "Food" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddDays(-15), DebtDueDate = DateTime.Now.AddDays(15) },
-        new Transaction { Amount = 2000, Source = "Credit Card Company", Description = "Credit Card Bill", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Overdue payment", Tags = new List<string> { "Bills" }, IsDebt = true, DebtStatus = DebtStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-3), DebtDueDate = DateTime.Now.AddMonths(-2) },
-        new Transaction { Amount = 800, Source = "Bank Loan", Description = "Car Loan Installment", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending car loan installment", Tags = new List<string> { "Vehicle" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-1), DebtDueDate = DateTime.Now.AddMonths(1) },
+        new Transaction { Amount = 1500, Source = "Himalayan Bank", Description = "Education Loan", Type = TransactionsStatus.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = true, DebtStatus = DebtsStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-6), DebtDueDate = DateTime.Now.AddMonths(6) },
+        new Transaction { Amount = 1200, Source = "Landlord", Description = "Unpaid Rent", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Pending for last month", Tags = new List<string> { "Housing" }, IsDebt = true, DebtStatus = DebtsStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-2), DebtDueDate = DateTime.Now.AddMonths(-1) },
+        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries on Credit", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Pending payment", Tags = new List<string> { "Food" }, IsDebt = true, DebtStatus = DebtsStatus.Pending, DebtTakenDate = DateTime.Now.AddDays(-15), DebtDueDate = DateTime.Now.AddDays(15) },
+        new Transaction { Amount = 2000, Source = "Credit Card Company", Description = "Credit Card Bill", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Overdue payment", Tags = new List<string> { "Bills" }, IsDebt = true, DebtStatus = DebtsStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-3), DebtDueDate = DateTime.Now.AddMonths(-2) },
+        new Transaction { Amount = 800, Source = "Bank Loan", Description = "Car Loan Installment", Type = TransactionsStatus.Outflow, Date = DateTime.Now, Notes = "Pending car loan installment", Tags = new List<string> { "Vehicle" }, IsDebt = true, DebtStatus = DebtsStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-1), DebtDueDate = DateTime.Now.AddMonths(1) },
     };
 
     private string FilterType { get; set; } = string.Empty;
@@ -193,9 +193,9 @@
 
     protected override void OnInitialized()
     {
-        totalInflow = transactions.Where(t => t.Type == TransactionType.Inflow).Sum(t => t.Amount);
-        totalOutflow = transactions.Where(t => t.Type == TransactionType.Outflow).Sum(t => t.Amount);
-        remainingDebt = totalDebt - transactions.Where(t => t.IsDebt && t.DebtStatus == DebtStatus.Paid).Sum(t => t.Amount);
+        totalInflow = transactions.Where(t => t.Type == TransactionsStatus.Inflow).Sum(t => t.Amount);
+        totalOutflow = transactions.Where(t => t.Type == TransactionsStatus.Outflow).Sum(t => t.Amount);
+        remainingDebt = totalDebt - transactions.Where(t => t.IsDebt && t.DebtStatus == DebtsStatus.Paid).Sum(t => t.Amount);
     }
 
     private IEnumerable<Transaction> FilteredTransactions =>
@@ -218,14 +218,14 @@
     }
 
     private Color GetAmountColor(Transaction transaction) =>
-        transaction.Type == TransactionType.Outflow ? Color.Error :
+        transaction.Type == TransactionsStatus.Outflow ? Color.Error :
         transaction.IsDebt ? Color.Warning : Color.Success;
 
-    private Color GetDebtStatusColor(DebtStatus? status) =>
+    private Color GetDebtStatusColor(DebtsStatus? status) =>
         status switch
         {
-            DebtStatus.Paid => Color.Success,
-            DebtStatus.Overdue => Color.Error,
+            DebtsStatus.Paid => Color.Success,
+            DebtsStatus.Overdue => Color.Error,
             _ => Color.Warning
         };
 
@@ -238,5 +238,5 @@
         StateHasChanged();
     }
     
-    private List<Transaction> PendingDebts => transactions.Where(t => t.IsDebt && t.DebtStatus == DebtStatus.Pending).ToList();
+    private List<Transaction> PendingDebts => transactions.Where(t => t.IsDebt && t.DebtStatus == DebtsStatus.Pending).ToList();
 }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MyPocketTrack")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+269c575670fafb3090d11a3cd9139b51638390ca")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+4b43dab258042c638918b91dc6a737ed2dd6f9aa")]
 [assembly: System.Reflection.AssemblyProductAttribute("MyPocketTrack")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MyPocketTrack")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
