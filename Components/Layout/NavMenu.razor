@@ -1,0 +1,90 @@
+﻿<MudDrawer @bind-Open="@DrawerOpen" 
+           ClipMode="DrawerClipMode.Always" 
+           Elevation="2" 
+           Variant="@DrawerVariant.Responsive"
+           Class="@($"mud-drawer-custom {(DrawerOpen ? "drawer-expanded" : "drawer-collapsed")}")">
+    
+    <MudDrawerHeader Class="drawer-header">
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudIcon Icon="@Icons.Material.Filled.AccountBalance" 
+                     Color="Color.Primary" 
+                     Size="Size.Large" />
+            @if (DrawerOpen)
+            {
+                <MudText Typo="Typo.h6" Color="Color.Primary">MyPocketTrack</MudText>
+            }
+        </MudStack>
+    </MudDrawerHeader>
+
+    <MudNavMenu Color="Color.Primary" Class="nav-menu">
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+            <MudText Class="@(DrawerOpen ? "nav-text" : "nav-text-hidden")">Dashboard</MudText>
+        </MudNavLink>
+
+        <MudNavLink Href="transaction" Icon="@Icons.Material.Filled.AddCircle">
+            <MudText Class="@(DrawerOpen ? "nav-text" : "nav-text-hidden")">Transaction</MudText>
+        </MudNavLink>
+
+        <MudNavLink Href="debt" Icon="@Icons.Material.Filled.Money">
+            <MudText Class="@(DrawerOpen ? "nav-text" : "nav-text-hidden")">Debt</MudText>
+        </MudNavLink>
+    </MudNavMenu>
+</MudDrawer>
+
+<style>
+    .mud-drawer-custom {
+        transition: width 0.3s ease-in-out;
+        background-color: #f5f5f5;
+        border-right: 1px solid #e0e0e0;
+    }
+
+    .drawer-expanded {
+        width: 260px;
+    }
+
+    .drawer-collapsed {
+        width: 60px;
+    }
+
+    .drawer-header {
+        padding: 16px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .nav-menu {
+        margin-top: 16px;
+    }
+
+    .nav-menu :global(.mud-nav-link) {
+        border-radius: 4px;
+        margin: 4px 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .nav-menu :global(.mud-nav-link:hover) {
+        background-color: rgba(25, 118, 210, 0.08);
+    }
+
+    .nav-menu :global(.mud-nav-link.active) {
+        background-color: rgb(25, 118, 210);
+        color: #fff;
+    }
+
+    .nav-text {
+        transition: opacity 0.3s ease-in-out;
+        opacity: 1;
+    }
+
+    .nav-text-hidden {
+        opacity: 0;
+        display: none;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public bool DrawerOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> DrawerOpenChanged { get; set; }
+}

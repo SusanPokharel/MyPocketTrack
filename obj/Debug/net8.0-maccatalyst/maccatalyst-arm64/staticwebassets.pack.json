@@ -1,0 +1,45 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/susanpokharel/RiderProjects/CourseworkAD/obj/Debug/net8.0-maccatalyst/maccatalyst-arm64/scopedcss/bundle/MyPocketTrack.styles.css",
+      "PackagePath": "staticwebassets/MyPocketTrack.styles.css"
+    },
+    {
+      "Id": "/Users/susanpokharel/RiderProjects/CourseworkAD/wwwroot/css/app.css",
+      "PackagePath": "staticwebassets/css/app.css"
+    },
+    {
+      "Id": "/Users/susanpokharel/RiderProjects/CourseworkAD/wwwroot/css/bootstrap/bootstrap.min.css",
+      "PackagePath": "staticwebassets/css/bootstrap/bootstrap.min.css"
+    },
+    {
+      "Id": "/Users/susanpokharel/RiderProjects/CourseworkAD/wwwroot/css/bootstrap/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/css/bootstrap/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/Users/susanpokharel/RiderProjects/CourseworkAD/wwwroot/favicon.png",
+      "PackagePath": "staticwebassets/favicon.png"
+    },
+    {
+      "Id": "/Users/susanpokharel/RiderProjects/CourseworkAD/wwwroot/index.html",
+      "PackagePath": "staticwebassets/index.html"
+    },
+    {
+      "Id": "obj/Debug/net8.0-maccatalyst/maccatalyst-arm64/staticwebassets/msbuild.MyPocketTrack.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0-maccatalyst/maccatalyst-arm64/staticwebassets/msbuild.build.MyPocketTrack.props",
+      "PackagePath": "build\\MyPocketTrack.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0-maccatalyst/maccatalyst-arm64/staticwebassets/msbuild.buildMultiTargeting.MyPocketTrack.props",
+      "PackagePath": "buildMultiTargeting\\MyPocketTrack.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0-maccatalyst/maccatalyst-arm64/staticwebassets/msbuild.buildTransitive.MyPocketTrack.props",
+      "PackagePath": "buildTransitive\\MyPocketTrack.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

@@ -1,0 +1,279 @@
+﻿@page "/"
+@using System.Linq
+@using MyPocketTrack.Components.Models
+@using MyPocketTrack.Components.Charts
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<div class="container-fluid">
+    <div class="row mt-4">
+        <div class="col-12">
+            <MudPaper Elevation="3" Class="p-4">
+                <MudText Typo="Typo.h5" Class="mb-4">Financial Analytics</MudText>
+                <DashboardCharts Transactions="@transactions" />
+            </MudPaper>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- Summary Cards -->
+        <div class="col-12 col-md-4 mb-4">
+            <div class="card shadow text-center" style="background: linear-gradient(135deg, #1d976c, #93f9b9); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title">Total Inflow</h5>
+                    <p class="card-text display-6">@totalInflow</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-4">
+            <div class="card shadow text-center" style="background: linear-gradient(135deg, #ff512f, #f09819); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title">Total Outflow</h5>
+                    <p class="card-text display-6">@totalOutflow</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-4">
+            <div class="card shadow text-center" style="background: linear-gradient(135deg, #396afc, #2948ff); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title">Remaining Balance</h5>
+                    <p class="card-text display-6">@(totalInflow - totalOutflow)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-4">
+            <div class="card shadow text-center" style="background: linear-gradient(135deg, #f7971e, #ffd200); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title">Remaining Debt</h5>
+                    <p class="card-text display-6">@remainingDebt</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-4">
+            <div class="card shadow text-center" style="background: linear-gradient(135deg, #00c6ff, #0072ff); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title">Total Debt</h5>
+                    <p class="card-text display-6">@totalDebt</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-4">
+            <div class="card shadow text-center" style="background: linear-gradient(135deg, #a770ef, #cf8bf3); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Debts</h5>
+                    <p class="card-text display-6">@transactions.Count(t => t.IsDebt && t.DebtStatus == DebtStatus.Pending)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Filters -->
+    <MudPaper Elevation="3" Class="p-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Transaction Type" @bind-Value="FilterType">
+                    <MudSelectItem Value="@(TransactionType.Inflow.ToString())">Inflow</MudSelectItem>
+                    <MudSelectItem Value="@(TransactionType.Outflow.ToString())">Outflow</MudSelectItem>
+                    <MudSelectItem Value="@("Debt")">Debt</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Tags" @bind-Value="FilterTag">
+                    @foreach (var tag in PredefinedTags)
+                    {
+                        <MudSelectItem Value="@tag">@tag</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField @bind-Value="SearchText" Label="Search" Adornment="Adornment.Start"
+                             AdornmentIcon="@Icons.Material.Filled.Search" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Transactions Table -->
+    <MudPaper Elevation="3" Class="p-4 mb-10">
+        <MudTable Items="@FilteredTransactions" Dense="true" Hover="true" Bordered="true" Striped="true"
+                  Filter="new Func<Transaction,bool>(FilterFunc)">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Transactions</MudText>
+                <MudSpacer />
+                <MudButton Color="Color.Primary" OnClick="ClearFilters">Clear Filters</MudButton>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Amount</MudTh>
+                <MudTh>Source</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Notes</MudTh>
+                <MudTh>Tags</MudTh>
+                @if (transactions.Any(t => t.IsDebt))
+                {
+                <MudTh>Debt Taken Date</MudTh>
+                <MudTh>Debt Due Date</MudTh>
+                <MudTh>Debt Paid Date</MudTh>
+                <MudTh>Debt Status</MudTh>
+                }
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Amount">
+                    <MudText Color="@(GetAmountColor(context))">
+                        @context.Amount.ToString("C")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Source">@context.Source</MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+                <MudTd DataLabel="Type">@context.Type</MudTd>
+                <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
+                <MudTd DataLabel="Notes">@context.Notes</MudTd>
+                <MudTd DataLabel="Tags">
+                    @foreach (var tag in context.Tags)
+                    {
+                        <MudChip T="string" Text="@tag" Size="Size.Small" Color="Color.Primary" Class="mr-1" />
+
+                    }
+                </MudTd>
+                @if (context.IsDebt)
+                {
+                <MudTd DataLabel="Debt Taken Date">@context.DebtTakenDate?.ToShortDateString()</MudTd>
+                <MudTd DataLabel="Debt Due Date">@context.DebtDueDate?.ToShortDateString()</MudTd>
+                <MudTd DataLabel="Debt Paid Date">@context.DebtPaidDate?.ToShortDateString()</MudTd>
+                <MudTd DataLabel="Debt Status">
+                    <MudChip T="string" Text="@context.DebtStatus.ToString()"
+                             Color="@(GetDebtStatusColor(context.DebtStatus))" />
+                </MudTd>
+                }
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
+
+    <!-- Pending Debts Table -->
+    <MudPaper Elevation="3" Class="p-4 mb-10">
+        <MudTable Items="@PendingDebts" Dense="false" Hover="true" Bordered="true" Striped="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Pending Debts</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Amount</MudTh>
+                <MudTh>Source</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Debt Taken Date</MudTh>
+                <MudTh>Debt Due Date</MudTh>
+                <MudTh>Status</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Amount">@context.Amount.ToString("C")</MudTd>
+                <MudTd DataLabel="Source">@context.Source</MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+                <MudTd DataLabel="Debt Taken Date">@context.DebtTakenDate?.ToShortDateString()</MudTd>
+                <MudTd DataLabel="Debt Due Date">@context.DebtDueDate?.ToShortDateString()</MudTd>
+                <MudTd DataLabel="Status">@context.DebtStatus</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+    
+@code {
+
+    private List<Transaction> transactions = new()
+    {
+        new Transaction { Amount = 3000, Source = "Company", Description = "Salary", Type = TransactionType.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = false },
+        new Transaction { Amount = 1200, Source = "Landlord", Description = "Rent", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Monthly rent", Tags = new List<string> { "Housing" }, IsDebt = false },
+        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Weekly groceries", Tags = new List<string> { "Food" }, IsDebt = false },
+        new Transaction { Amount = 500, Source = "Freelancer", Description = "Freelance Project", Type = TransactionType.Inflow, Date = DateTime.Now, Notes = "Freelance work", Tags = new List<string> { "Extra Income" }, IsDebt = false },
+        new Transaction { Amount = 200, Source = "Utility Company", Description = "Utilities", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Electricity bill", Tags = new List<string> { "Bills" }, IsDebt = false },
+
+        new Transaction { Amount = 1500, Source = "Himalayan Bank", Description = "Education Loan", Type = TransactionType.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-6), DebtDueDate = DateTime.Now.AddMonths(6) },
+        new Transaction { Amount = 1200, Source = "Landlord", Description = "Unpaid Rent", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending for last month", Tags = new List<string> { "Housing" }, IsDebt = true, DebtStatus = DebtStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-2), DebtDueDate = DateTime.Now.AddMonths(-1) },
+        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries on Credit", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending payment", Tags = new List<string> { "Food" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddDays(-15), DebtDueDate = DateTime.Now.AddDays(15) },
+        new Transaction { Amount = 2000, Source = "Credit Card Company", Description = "Credit Card Bill", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Overdue payment", Tags = new List<string> { "Bills" }, IsDebt = true, DebtStatus = DebtStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-3), DebtDueDate = DateTime.Now.AddMonths(-2) },
+        new Transaction { Amount = 800, Source = "Bank Loan", Description = "Car Loan Installment", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending car loan installment", Tags = new List<string> { "Vehicle" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-1), DebtDueDate = DateTime.Now.AddMonths(1) },
+        
+        new Transaction { Amount = 1500, Source = "Himalayan Bank", Description = "Education Loan", Type = TransactionType.Inflow, Date = DateTime.Now, Notes = "Monthly payment", Tags = new List<string> { "Income" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-6), DebtDueDate = DateTime.Now.AddMonths(6) },
+        new Transaction { Amount = 1200, Source = "Landlord", Description = "Unpaid Rent", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending for last month", Tags = new List<string> { "Housing" }, IsDebt = true, DebtStatus = DebtStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-2), DebtDueDate = DateTime.Now.AddMonths(-1) },
+        new Transaction { Amount = 300, Source = "Supermarket", Description = "Groceries on Credit", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending payment", Tags = new List<string> { "Food" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddDays(-15), DebtDueDate = DateTime.Now.AddDays(15) },
+        new Transaction { Amount = 2000, Source = "Credit Card Company", Description = "Credit Card Bill", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Overdue payment", Tags = new List<string> { "Bills" }, IsDebt = true, DebtStatus = DebtStatus.Overdue, DebtTakenDate = DateTime.Now.AddMonths(-3), DebtDueDate = DateTime.Now.AddMonths(-2) },
+        new Transaction { Amount = 800, Source = "Bank Loan", Description = "Car Loan Installment", Type = TransactionType.Outflow, Date = DateTime.Now, Notes = "Pending car loan installment", Tags = new List<string> { "Vehicle" }, IsDebt = true, DebtStatus = DebtStatus.Pending, DebtTakenDate = DateTime.Now.AddMonths(-1), DebtDueDate = DateTime.Now.AddMonths(1) },
+    };
+
+    private string FilterType { get; set; } = string.Empty;
+    private string FilterTag { get; set; } = string.Empty;
+    private string SearchText { get; set; } = string.Empty;
+    private DateRange _dateRange = new();
+
+    private decimal totalInflow;
+    private decimal totalOutflow;
+    private decimal remainingDebt = 0;
+    private decimal totalDebt = 1000;
+
+    // Predefined list of sources
+    private readonly string[] PredefinedTags = new[]
+    {
+        "Income",
+        "Housing",
+        "Food",
+        "Savings",
+        "Shopping",
+        "Bills",
+        "Entertainment"
+    };
+
+    protected override void OnInitialized()
+    {
+        totalInflow = transactions.Where(t => t.Type == TransactionType.Inflow).Sum(t => t.Amount);
+        totalOutflow = transactions.Where(t => t.Type == TransactionType.Outflow).Sum(t => t.Amount);
+        remainingDebt = totalDebt - transactions.Where(t => t.IsDebt && t.DebtStatus == DebtStatus.Paid).Sum(t => t.Amount);
+    }
+
+    private IEnumerable<Transaction> FilteredTransactions =>
+        transactions.Where(t =>
+            (string.IsNullOrEmpty(FilterType) || t.Type.ToString() == FilterType || (FilterType == "Debt" && t.IsDebt)) &&
+            (string.IsNullOrEmpty(FilterTag) || t.Tags.Contains(FilterTag)) &&
+            (!_dateRange.Start.HasValue || t.Date >= _dateRange.Start.Value) &&
+            (!_dateRange.End.HasValue || t.Date <= _dateRange.End.Value)
+        );
+
+    private bool FilterFunc(Transaction transaction)
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+            return true;
+
+        return transaction.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+               transaction.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+               transaction.Notes?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+               transaction.Tags.Any(t => t.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private Color GetAmountColor(Transaction transaction) =>
+        transaction.Type == TransactionType.Outflow ? Color.Error :
+        transaction.IsDebt ? Color.Warning : Color.Success;
+
+    private Color GetDebtStatusColor(DebtStatus? status) =>
+        status switch
+        {
+            DebtStatus.Paid => Color.Success,
+            DebtStatus.Overdue => Color.Error,
+            _ => Color.Warning
+        };
+
+    private void ClearFilters()
+    {
+        FilterType = string.Empty;
+        FilterTag = string.Empty;
+        SearchText = string.Empty;
+        _dateRange = new DateRange();
+        StateHasChanged();
+    }
+    
+    private List<Transaction> PendingDebts => transactions.Where(t => t.IsDebt && t.DebtStatus == DebtStatus.Pending).ToList();
+}

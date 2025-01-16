@@ -1,0 +1,166 @@
+@using MyPocketTrack.Components.Models
+@inject Services.TransactionService transactionService
+@inject ISnackbar Snackbar
+
+<MudDialog DisableSidePadding="true">
+    <DialogContent>
+        <MudContainer Style="max-height: 600px; overflow-y: auto">
+            <EditForm Model="@transaction" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator/>
+                <MudGrid>
+                    <!-- Amount -->
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="transaction.Amount"
+                                    Label="Amount"
+                                    Required="true"
+                                    Adornment="Adornment.Start"
+                                    AdornmentText="$"/>
+                    </MudItem>
+
+                    <!-- Type -->
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="TransactionType" @bind-Value="transaction.Type"
+                                 Label="Type" Required="true">
+                            <MudSelectItem Value="@TransactionType.Inflow">Inflow</MudSelectItem>
+                            <MudSelectItem Value="@TransactionType.Outflow">Outflow</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Source -->
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="transaction.Source"
+                                    Label="Source"
+                                    Required="true"/>
+                    </MudItem>
+
+                    <!-- Description -->
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="transaction.Description"
+                                    Label="Description"
+                                    Required="true"
+                                    Lines="2"/>
+                    </MudItem>
+
+                    <!-- Date -->
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker @bind-Date="selectedDate"
+                                     Label="Date"
+                                     Required="true"/>
+                    </MudItem>
+
+                    <!-- Notes -->
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="transaction.Notes"
+                                    Label="Notes"
+                                    Lines="2"/>
+                    </MudItem>
+
+                    <!-- Tags -->
+                    <MudItem xs="12">
+                        <MudSelect T="string" Label="Tags"
+                                 MultiSelection="true"
+                                 @bind-SelectedValues="selectedTags">
+                            @foreach (var tag in PredefinedTags)
+                            {
+                                <MudSelectItem Value="@tag">@tag</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+
+                    <!-- Is Debt -->
+                    <MudItem xs="12">
+                        <MudButton OnClick="ConvertDebtStatus" 
+                                 Color="Color.Primary"
+                                 Variant="@(isDebtSelected ? Variant.Filled : Variant.Outlined)">
+                            Is Debt?
+                        </MudButton>
+                    </MudItem>
+
+                    @if (isDebtSelected)
+                    {
+                        <!-- Debt Due Date -->
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="selectedDebtDueDate"
+                                         Label="Debt Due Date"
+                                         Required="true"/>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </EditForm>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="HandleSubmit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+
+    private Transaction transaction = new() { Date = DateTime.Today };
+    private IEnumerable<string> selectedTags = new List<string>();
+    private bool isDebtSelected = false;
+    private DateTime? selectedDate = DateTime.Today;
+    private DateTime? selectedDebtDueDate;
+
+    public List<string> PredefinedTags { get; } = new()
+    {
+        "Income",
+        "Housing",
+        "Food",
+        "Savings",
+        "Shopping",
+        "Bills",
+        "Entertainment"
+    };
+
+    
+    protected override void OnInitialized()
+    {
+        if (MudDialog is null)
+            throw new Exception("MudDialog instance not found");
+    }
+    
+    private void ConvertDebtStatus()
+    {
+        isDebtSelected = !isDebtSelected;
+        if (!isDebtSelected)
+        {
+            selectedDebtDueDate = null;
+            transaction.DebtDueDate = null;
+            transaction.IsDebt = false;
+        }
+        else
+        {
+            transaction.IsDebt = true;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!selectedDate.HasValue)
+        {
+            Snackbar.Add("Transaction date is required.", Severity.Error);
+            return;
+        }
+
+        transaction.Date = selectedDate.Value;
+
+        if (isDebtSelected)
+        {
+            if (!selectedDebtDueDate.HasValue)
+            {
+                Snackbar.Add("Due dates are required for debt transactions.", Severity.Error);
+                return;
+            }
+
+            transaction.DebtDueDate = selectedDebtDueDate;
+        }
+
+        transaction.Tags = selectedTags.ToList();
+        MudDialog.Close(DialogResult.Ok(transaction));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

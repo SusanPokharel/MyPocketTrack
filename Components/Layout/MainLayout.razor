@@ -1,0 +1,80 @@
+﻿@inherits LayoutComponentBase
+@inject Services.UserServices UserServices
+@inject NavigationManager NavigationManager
+
+<MudThemeProvider/>
+<MudDialogProvider />
+<MudSnackbarProvider/>
+<MudPopoverProvider/>
+
+@{
+var currentPath = NavigationManager.Uri.ToLower();
+var isAuthPage = currentPath.EndsWith("/login") || currentPath.EndsWith("/register");
+}
+
+@if (!isAuthPage && !isAuthenticated)
+{
+NavigationManager.NavigateTo("/login");
+}
+else if (isAuthPage)
+{
+@Body
+}
+else
+{
+<MudLayout>
+    <MudAppBar Elevation="1" Dense="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-4">MyPocketTrack</MudText>
+        <MudSpacer />
+
+        <MudText Typo="Typo.body1" Align="Align.Right" Class="mr-4">
+            Welcome, @UserServices.GetCurrentUser()?.Username
+        </MudText>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   OnClick="Logout">Logout</MudButton>
+    </MudAppBar>
+
+    <NavMenu DrawerOpen="@_drawerOpen" DrawerOpenChanged="@OnDrawerStateChanged" />
+
+    <MudMainContent Class="pt-16 px-8">
+        @Body
+    </MudMainContent>
+</MudLayout>
+}
+
+@code {
+    private bool _drawerOpen = true;
+    private bool isAuthenticated;
+
+    protected override void OnInitialized()
+    {
+        isAuthenticated = UserServices.IsAuthenticated();
+    }
+
+    protected override void OnParametersSet()
+    {
+        isAuthenticated = UserServices.IsAuthenticated();
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void OnDrawerStateChanged(bool isOpen)
+    {
+        _drawerOpen = isOpen;
+    }
+
+    private void Logout()
+    {
+        UserServices.Logout();
+        isAuthenticated = false;
+        NavigationManager.NavigateTo("/login");
+    }
+}

@@ -1,0 +1,173 @@
+﻿@page "/transaction"
+@using MyPocketTrack.Components.DialogModals
+@inject Services.TransactionService TransactionService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@layout Layout.MainLayout
+
+
+<div class="container-fluid p-4">
+    <div class="row">
+        <!-- Top 5 Highest Transactions -->
+        <div class="col-12 col-md-6 mb-4">
+            <MudPaper Elevation="3" Class="p-4">
+                <MudTable Items="@TopHighestTransactions" Dense="false" Hover="true" Bordered="true" Striped="true">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Top 5 Highest Transactions</MudText>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Amount</MudTh>
+                        <MudTh>Source</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Amount.ToString("C")</MudTd>
+                        <MudTd>@context.Source</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </div>
+
+        <!-- Top 5 Lowest Transactions -->
+        <div class="col-12 col-md-6 mb-4">
+            <MudPaper Elevation="3" Class="p-4">
+                <MudTable Items="@TopLowestTransactions" Dense="false" Hover="true" Bordered="true" Striped="true">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Top 5 Lowest Transactions</MudText>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Amount</MudTh>
+                        <MudTh>Source</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Amount.ToString("C")</MudTd>
+                        <MudTd>@context.Source</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <MudPaper Elevation="3" Class="p-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Transaction Type" @bind-Value="FilterType">
+                    <MudSelectItem Value="@(Models.TransactionType.Inflow.ToString())">Inflow</MudSelectItem>
+                    <MudSelectItem Value="@(Models.TransactionType.Outflow.ToString())">Outflow</MudSelectItem>
+                    <MudSelectItem Value="@("Debt")">Debt</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Tags" @bind-Value="FilterTag">
+                    @foreach (var tag in TransactionService.PredefinedTags)
+                    {
+                        <MudSelectItem Value="@tag">@tag</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange"/>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField @bind-Value="SearchText" Label="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"/>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+    
+    <!-- Main Transactions Table -->
+    <MudPaper Elevation="3" Class="p-4 mb-10">
+        <MudTable Items="@FilteredTransactions" Dense="false" Hover="true" Bordered="true" Striped="true" Filter="FilterFunc">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">All Transactions</MudText>
+                <MudSpacer/>
+                <MudButton Color="Color.Primary" OnClick="OpenDialogAsync" StartIcon="@Icons.Material.Filled.Add">Add Transaction</MudButton>
+                <MudButton Color="Color.Primary" OnClick="ClearFilters" StartIcon="@Icons.Material.Filled.FilterList">Clear Filters</MudButton>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Amount</MudTh>
+                <MudTh>Source</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Tags</MudTh>
+                @if (FilteredTransactions.Any(t => t.IsDebt))
+                {
+                    <MudTh>Debt Status</MudTh>
+                }
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Amount.ToString("C")</MudTd>
+                <MudTd>@context.Source</MudTd>
+                <MudTd>@context.Description</MudTd>
+                <MudTd>@context.Type</MudTd>
+                <MudTd>@context.Date.ToShortDateString()</MudTd>
+                <MudTd>@string.Join(", ", context.Tags)</MudTd>
+                @if (context.IsDebt)
+                {
+                    <MudTd>@context.DebtStatus</MudTd>
+                }
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</div>
+
+@code {
+    private string FilterType = string.Empty;
+    private string FilterTag = string.Empty;
+    private string SearchText = string.Empty;
+    private DateRange _dateRange = new();
+
+    private IEnumerable<Models.Transaction> TopHighestTransactions => TransactionService.GetTopHighestTransactions(5);
+    private IEnumerable<Models.Transaction> TopLowestTransactions => TransactionService.GetTopLowestTransactions(5);
+
+    private IEnumerable<Models.Transaction> FilteredTransactions => TransactionService.GetTransactions()
+        .Where(t =>
+            (string.IsNullOrEmpty(FilterType) || t.Type.ToString() == FilterType || (FilterType == "Debt" && t.IsDebt)) &&
+            (string.IsNullOrEmpty(FilterTag) || t.Tags.Contains(FilterTag)) &&
+            (string.IsNullOrEmpty(SearchText) ||
+             t.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+             t.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+
+    private bool FilterFunc(Models.Transaction transaction) =>
+        string.IsNullOrEmpty(SearchText) ||
+        transaction.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+        transaction.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+
+    private async Task OpenDialogAsync()
+    {
+        var options = new DialogOptions 
+        { 
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TransactionDialog>("Add Transaction", options);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            var transaction = (Models.Transaction)result.Data;
+            await AddTransaction(transaction);
+        }
+    }
+
+    private async Task AddTransaction(Models.Transaction transaction)
+    {
+        TransactionService.AddTransaction(transaction);
+        Snackbar.Add("Transaction added successfully.", Severity.Success);
+        StateHasChanged();
+    }
+
+    private void ClearFilters()
+    {
+        FilterType = string.Empty;
+        FilterTag = string.Empty;
+        SearchText = string.Empty;
+        _dateRange = new DateRange();
+    }
+}
