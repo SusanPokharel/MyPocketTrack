@@ -2,21 +2,15 @@
 @using System.Linq
 @using MyPocketTrack.Components.Models
 @using MyPocketTrack.Components.Charts
+@using MyPocketTrack.Components.Services
+@inject TransactionService TransactionService
+
 
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <div class="container-fluid">
-    <div class="row mt-4">
-        <div class="col-12">
-            <MudPaper Elevation="3" Class="p-4">
-                <MudText Typo="Typo.h5" Class="mb-4">Financial Analytics</MudText>
-                <DashboardCharts Transactions="@transactions" />
-            </MudPaper>
-        </div>
-    </div>
-    
     <div class="row mt-4">
         <!-- Summary Cards -->
         <div class="col-12 col-md-4 mb-4">
@@ -68,98 +62,63 @@
             </div>
         </div>
     </div>
-</div>
 
-    <!-- Filters -->
-    <MudPaper Elevation="3" Class="p-4 mb-4">
-        <MudGrid>
-            <MudItem xs="12" md="3">
-                <MudSelect T="string" Label="Transaction Type" @bind-Value="FilterType">
-                    <MudSelectItem Value="@(TransactionType.Inflow.ToString())">Inflow</MudSelectItem>
-                    <MudSelectItem Value="@(TransactionType.Outflow.ToString())">Outflow</MudSelectItem>
-                    <MudSelectItem Value="@("Debt")">Debt</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudSelect T="string" Label="Tags" @bind-Value="FilterTag">
-                    @foreach (var tag in PredefinedTags)
-                    {
-                        <MudSelectItem Value="@tag">@tag</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange" />
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudTextField @bind-Value="SearchText" Label="Search" Adornment="Adornment.Start"
-                             AdornmentIcon="@Icons.Material.Filled.Search" />
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
+    <div class="row mt-4">
+        <div class="col-12">
+            <MudPaper Elevation="3" Class="p-4">
+                <MudText Typo="Typo.h5" Class="mb-4">Financial Analytics</MudText>
+                <DashboardCharts Transactions="@transactions" />
+            </MudPaper>
+        </div>
+    </div>
 
-    <!-- Transactions Table -->
-    <MudPaper Elevation="3" Class="p-4 mb-10">
-        <MudTable Items="@FilteredTransactions" Dense="true" Hover="true" Bordered="true" Striped="true"
-                  Filter="new Func<Transaction,bool>(FilterFunc)">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Transactions</MudText>
-                <MudSpacer />
-                <MudButton Color="Color.Primary" OnClick="ClearFilters">Clear Filters</MudButton>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Amount</MudTh>
-                <MudTh>Source</MudTh>
-                <MudTh>Description</MudTh>
-                <MudTh>Type</MudTh>
-                <MudTh>Date</MudTh>
-                <MudTh>Notes</MudTh>
-                <MudTh>Tags</MudTh>
-                @if (transactions.Any(t => t.IsDebt))
-                {
-                <MudTh>Debt Taken Date</MudTh>
-                <MudTh>Debt Due Date</MudTh>
-                <MudTh>Debt Paid Date</MudTh>
-                <MudTh>Debt Status</MudTh>
-                }
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Amount">
-                    <MudText Color="@(GetAmountColor(context))">
-                        @context.Amount.ToString("C")
-                    </MudText>
-                </MudTd>
-                <MudTd DataLabel="Source">@context.Source</MudTd>
-                <MudTd DataLabel="Description">@context.Description</MudTd>
-                <MudTd DataLabel="Type">@context.Type</MudTd>
-                <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
-                <MudTd DataLabel="Notes">@context.Notes</MudTd>
-                <MudTd DataLabel="Tags">
-                    @foreach (var tag in context.Tags)
-                    {
-                        <MudChip T="string" Text="@tag" Size="Size.Small" Color="Color.Primary" Class="mr-1" />
 
-                    }
-                </MudTd>
-                @if (context.IsDebt)
-                {
-                <MudTd DataLabel="Debt Taken Date">@context.DebtTakenDate?.ToShortDateString()</MudTd>
-                <MudTd DataLabel="Debt Due Date">@context.DebtDueDate?.ToShortDateString()</MudTd>
-                <MudTd DataLabel="Debt Paid Date">@context.DebtPaidDate?.ToShortDateString()</MudTd>
-                <MudTd DataLabel="Debt Status">
-                    <MudChip T="string" Text="@context.DebtStatus.ToString()"
-                             Color="@(GetDebtStatusColor(context.DebtStatus))" />
-                </MudTd>
-                }
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager />
-            </PagerContent>
-        </MudTable>
-    </MudPaper>
+    <div class="row mt-4">
+        <!-- Top 5 Highest Transactions -->
+        <div class="col-12 col-md-6 mb-4">
+            <MudPaper Elevation="3" Class="p-4">
+                <MudTable Items="@TopHighestTransactions" Dense="false" Hover="true" Bordered="true" Striped="true">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Top 5 Highest Transactions</MudText>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Amount</MudTh>
+                        <MudTh>Source</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Amount.ToString("C")</MudTd>
+                        <MudTd>@context.Source</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </div>
+
+        <!-- Top 5 Lowest Transactions -->
+        <div class="col-12 col-md-6 mb-4">
+            <MudPaper Elevation="3" Class="p-4">
+                <MudTable Items="@TopLowestTransactions" Dense="false" Hover="true" Bordered="true" Striped="true">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Top 5 Lowest Transactions</MudText>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Amount</MudTh>
+                        <MudTh>Source</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Amount.ToString("C")</MudTd>
+                        <MudTd>@context.Source</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </div>
+    </div>
 
     <!-- Pending Debts Table -->
-    <MudPaper Elevation="3" Class="p-4 mb-10">
+    <MudPaper Elevation="3" Class="p-4 m-1 mb-10">
         <MudTable Items="@PendingDebts" Dense="false" Hover="true" Bordered="true" Striped="true">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Pending Debts</MudText>
@@ -182,7 +141,8 @@
             </RowTemplate>
         </MudTable>
     </MudPaper>
-    
+</div>
+
 @code {
 
     private List<Transaction> transactions = new()
@@ -211,6 +171,9 @@
     private string SearchText { get; set; } = string.Empty;
     private DateRange _dateRange = new();
 
+    private IEnumerable<Models.Transaction> TopHighestTransactions => TransactionService.GetTopHighestTransactions(5);
+    private IEnumerable<Models.Transaction> TopLowestTransactions => TransactionService.GetTopLowestTransactions(5);
+    
     private decimal totalInflow;
     private decimal totalOutflow;
     private decimal remainingDebt = 0;

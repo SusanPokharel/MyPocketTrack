@@ -5,13 +5,13 @@
 <div>
     <MudGrid>
         <!-- Complex Transaction Flow Chart -->
-        <MudItem xs="12" md="6">
+        <MudItem xs="10" md="4">
             <MudPaper Elevation="3" Class="pa-4">
                 <MudText Typo="Typo.h6" Class="mb-4">Transaction Flow Analysis</MudText>
                 <MudChart ChartType="ChartType.Line" 
                          ChartSeries="@GetTransactionFlowSeries()"
                          XAxisLabels="@GetTransactionDates()" 
-                         Width="100%" Height="350px">
+                         Width="100%" Height="260px">
                     <CustomGraphics>
                         <MudText Typo="Typo.h6">Transaction Trends Over Time</MudText>
                     </CustomGraphics>
@@ -20,13 +20,13 @@
         </MudItem>
 
         <!-- Debt Analysis Stacked Bar Chart -->
-        <MudItem xs="12" md="6">
+        <MudItem xs="10" md="4">
             <MudPaper Elevation="3" Class="pa-4">
                 <MudText Typo="Typo.h6" Class="mb-4">Debt Status Distribution</MudText>
                 <MudChart ChartType="ChartType.Bar" 
                          ChartSeries="@GetDebtStatusSeries()"
                          XAxisLabels="@GetDebtCategories()"
-                         Width="100%" Height="350px">
+                         Width="100%" Height="260px">
                     <CustomGraphics>
                         <MudText Typo="Typo.h6">Debt Distribution by Status and Category</MudText>
                     </CustomGraphics>
@@ -35,13 +35,13 @@
         </MudItem>
 
         <!-- Category-wise Spending Donut Chart -->
-        <MudItem xs="12" md="6">
+        <MudItem xs="10" md="4">
             <MudPaper Elevation="3" Class="pa-4">
                 <MudText Typo="Typo.h6" Class="mb-4">Category-wise Spending</MudText>
                 <MudChart ChartType="ChartType.Donut" 
                          InputData="@GetCategorySpendingData()"
                          InputLabels="@GetCategoryLabels()"
-                         Width="100%" Height="350px">
+                         Width="100%" Height="260px">
                     <CustomGraphics>
                         <MudText Typo="Typo.h6">Expense Distribution by Category</MudText>
                     </CustomGraphics>
@@ -50,13 +50,13 @@
         </MudItem>
 
         <!-- Monthly Balance Trend -->
-        <MudItem xs="12" md="6">
+        <MudItem xs="10" md="4">
             <MudPaper Elevation="3" Class="pa-4">
                 <MudText Typo="Typo.h6" Class="mb-4">Monthly Balance Trend</MudText>
                 <MudChart ChartType="ChartType.Bar" 
                          ChartSeries="@GetMonthlyBalanceSeries()"
                          XAxisLabels="@GetMonthLabels()"
-                         Width="100%" Height="350px">
+                         Width="100%" Height="260px">
                     <CustomGraphics>
                         <MudText Typo="Typo.h6">Net Balance Progression</MudText>
                     </CustomGraphics>
