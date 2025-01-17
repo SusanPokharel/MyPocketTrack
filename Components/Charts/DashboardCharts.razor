@@ -1,185 +1,193 @@
-@page "/charts"
-@using System.Linq
 @using MyPocketTrack.Components.Models
+@using MyPocketTrack.Components.Services
 
-<div>
-    <MudGrid>
-        <!-- Complex Transaction Flow Chart -->
-        <MudItem xs="10" md="4">
-            <MudPaper Elevation="3" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Transaction Flow Analysis</MudText>
-                <MudChart ChartType="ChartType.Line" 
-                         ChartSeries="@GetTransactionFlowSeries()"
-                         XAxisLabels="@GetTransactionDates()" 
-                         Width="100%" Height="260px">
-                    <CustomGraphics>
-                        <MudText Typo="Typo.h6">Transaction Trends Over Time</MudText>
-                    </CustomGraphics>
-                </MudChart>
-            </MudPaper>
-        </MudItem>
+<div class="dashboard-charts">
+    @if (_isLoading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
+    }
+    else if (!Transactions.Any())
+    {
+        <MudAlert Severity="Severity.Info">No transaction data available for charts.</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Transaction Flow Analysis</MudText>
+                    @if (_transactionFlowSeries.Any())
+                    {
+                        <MudChart ChartType="ChartType.Line" 
+                                  ChartSeries="@_transactionFlowSeries"
+                                  XAxisLabels="@_monthLabels"
+                                  Width="100%" Height="300px" />
+                    }
+                </MudPaper>
+            </MudItem>
 
-        <!-- Debt Analysis Stacked Bar Chart -->
-        <MudItem xs="10" md="4">
-            <MudPaper Elevation="3" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Debt Status Distribution</MudText>
-                <MudChart ChartType="ChartType.Bar" 
-                         ChartSeries="@GetDebtStatusSeries()"
-                         XAxisLabels="@GetDebtCategories()"
-                         Width="100%" Height="260px">
-                    <CustomGraphics>
-                        <MudText Typo="Typo.h6">Debt Distribution by Status and Category</MudText>
-                    </CustomGraphics>
-                </MudChart>
-            </MudPaper>
-        </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Income vs Expenses</MudText>
+                    @if (_incomeVsExpensesSeries.Any())
+                    {
+                        <MudChart ChartType="ChartType.Bar" 
+                                  ChartSeries="@_incomeVsExpensesSeries"
+                                  XAxisLabels="@_monthLabels"
+                                  Width="100%" Height="300px" />
+                    }
+                </MudPaper>
+            </MudItem>
 
-        <!-- Category-wise Spending Donut Chart -->
-        <MudItem xs="10" md="4">
-            <MudPaper Elevation="3" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Category-wise Spending</MudText>
-                <MudChart ChartType="ChartType.Donut" 
-                         InputData="@GetCategorySpendingData()"
-                         InputLabels="@GetCategoryLabels()"
-                         Width="100%" Height="260px">
-                    <CustomGraphics>
-                        <MudText Typo="Typo.h6">Expense Distribution by Category</MudText>
-                    </CustomGraphics>
-                </MudChart>
-            </MudPaper>
-        </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Debt Distribution</MudText>
+                    @if (_debtDistributionData.Any())
+                    {
+                        <MudChart ChartType="ChartType.Pie"
+                                  InputData="@_debtDistributionData"
+                                  InputLabels="@_debtStatusLabels"
+                                  Width="100%" Height="300px" />
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">No debt data available.</MudAlert>
+                    }
+                </MudPaper>
+            </MudItem>
 
-        <!-- Monthly Balance Trend -->
-        <MudItem xs="10" md="4">
-            <MudPaper Elevation="3" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Monthly Balance Trend</MudText>
-                <MudChart ChartType="ChartType.Bar" 
-                         ChartSeries="@GetMonthlyBalanceSeries()"
-                         XAxisLabels="@GetMonthLabels()"
-                         Width="100%" Height="260px">
-                    <CustomGraphics>
-                        <MudText Typo="Typo.h6">Net Balance Progression</MudText>
-                    </CustomGraphics>
-                </MudChart>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="3" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Spending by Category</MudText>
+                    @if (_categorySpendingData.Any())
+                    {
+                        <MudChart ChartType="ChartType.Donut"
+                                  InputData="@_categorySpendingData"
+                                  InputLabels="@_categoryLabels"
+                                  Width="100%" Height="300px" />
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">No spending data available.</MudAlert>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
 </div>
 
 @code {
     [Parameter]
-    public List<Transaction> Transactions { get; set; }
+    public List<Transaction> Transactions { get; set; } = new();
 
-    private List<ChartSeries> GetTransactionFlowSeries()
+    private bool _isLoading = true;
+    private List<ChartSeries> _transactionFlowSeries = new();
+    private List<ChartSeries> _incomeVsExpensesSeries = new();
+    private double[] _debtDistributionData = Array.Empty<double>();
+    private string[] _debtStatusLabels = Array.Empty<string>();
+    private double[] _categorySpendingData = Array.Empty<double>();
+    private string[] _categoryLabels = Array.Empty<string>();
+    private string[] _monthLabels = Array.Empty<string>();
+
+    protected override async Task OnParametersSetAsync()
     {
-        var dates = Transactions.OrderBy(t => t.Date)
-            .Select(t => t.Date.Date)
-            .Distinct()
-            .ToList();
-
-        var inflowData = dates.Select(date => 
-                Transactions.Where(t => t.Date.Date == date && t.Type == TransactionsStatus.Inflow)
-                    .Sum(t => t.Amount))
-            .ToArray();
-
-        var outflowData = dates.Select(date => 
-                Transactions.Where(t => t.Date.Date == date && t.Type == TransactionsStatus.Outflow)
-                    .Sum(t => t.Amount))
-            .ToArray();
-
-        var balanceData = new double[dates.Count];
-        double runningBalance = 0;
-        for(int i = 0; i < dates.Count; i++)
+        try
         {
-            runningBalance += (double)(inflowData[i] - outflowData[i]);
-            balanceData[i] = runningBalance;
+            _isLoading = true;
+            await LoadChartDataAsync();
         }
-
-        return new List<ChartSeries>
+        finally
         {
-            new ChartSeries { Name = "Inflow", Data = inflowData.Select(d => (double)d).ToArray() },
-            new ChartSeries { Name = "Outflow", Data = outflowData.Select(d => (double)d).ToArray() },
-            new ChartSeries { Name = "Balance", Data = balanceData }
-        };
+            _isLoading = false;
+        }
     }
 
-    private string[] GetTransactionDates()
+    private async Task LoadChartDataAsync()
     {
-        return Transactions.OrderBy(t => t.Date)
-                          .Select(t => t.Date.ToString("MM/dd"))
-                          .Distinct()
-                          .ToArray();
+        if (!Transactions.Any()) return;
+
+        await Task.Run(() =>
+        {
+            var monthlyData = GetMonthlyTransactionData();
+            LoadTransactionFlowChart(monthlyData);
+            LoadIncomeExpensesChart(monthlyData);
+            LoadDebtDistributionChart();
+            LoadCategorySpendingChart();
+        });
     }
 
-    private List<ChartSeries> GetDebtStatusSeries()
+    private List<MonthlyTransactionData> GetMonthlyTransactionData()
     {
-        var statuses = Enum.GetValues(typeof(DebtsStatus)).Cast<DebtsStatus>();
-        return statuses.Select(status =>
-            new ChartSeries
-            {
-                Name = status.ToString(),
-                Data = Transactions.Where(t => t.IsDebt && t.DebtStatus == status)
-                    .GroupBy(t => t.Tags.FirstOrDefault() ?? "Uncategorized")
-                    .OrderBy(g => g.Key)
-                    .Select(g => (double)g.Sum(t => t.Amount))
-                    .ToArray()
-            }).ToList();  // Note the ToList() here
-    }
-
-    private string[] GetDebtCategories()
-    {
-        return Transactions.Where(t => t.IsDebt)
-                          .SelectMany(t => t.Tags)
-                          .Distinct()
-                          .OrderBy(t => t)
-                          .ToArray();
-    }
-
-    private double[] GetCategorySpendingData()
-    {
-        return Transactions.Where(t => t.Type == TransactionsStatus.Outflow)
-                          .GroupBy(t => t.Tags.FirstOrDefault() ?? "Uncategorized")
-                          .OrderByDescending(g => g.Sum(t => t.Amount))
-                          .Select(g => (double)g.Sum(t => t.Amount))
-                          .ToArray();
-    }
-
-    private string[] GetCategoryLabels()
-    {
-        return Transactions.Where(t => t.Type == TransactionsStatus.Outflow)
-                          .SelectMany(t => t.Tags)
-                          .Distinct()
-                          .OrderByDescending(t => 
-                              Transactions.Where(tr => tr.Tags.Contains(t))
-                                        .Sum(tr => tr.Amount))
-                          .ToArray();
-    }
-
-    private List<ChartSeries> GetMonthlyBalanceSeries()
-    {
-        var monthlyData = Transactions.GroupBy(t => new { t.Date.Year, t.Date.Month })
+        return Transactions
+            .GroupBy(t => new { t.Date.Year, t.Date.Month })
             .OrderBy(g => g.Key.Year)
             .ThenBy(g => g.Key.Month)
-            .Select(g => new
+            .Select(g => new MonthlyTransactionData
             {
-                Inflow = g.Where(t => t.Type == TransactionsStatus.Inflow).Sum(t => t.Amount),
-                Outflow = g.Where(t => t.Type == TransactionsStatus.Outflow).Sum(t => t.Amount),
-                Balance = g.Where(t => t.Type == TransactionsStatus.Inflow).Sum(t => t.Amount) -
-                          g.Where(t => t.Type == TransactionsStatus.Outflow).Sum(t => t.Amount)
-            }).ToList();
+                YearMonth = $"{g.Key.Year}/{g.Key.Month:00}",
+                Inflow = g.Where(t => t.Type == TransactionsStatus.Inflow).Sum(t => (double)t.Amount),
+                Outflow = g.Where(t => t.Type == TransactionsStatus.Outflow).Sum(t => (double)t.Amount),
+                Balance = g.Where(t => t.Type == TransactionsStatus.Inflow).Sum(t => (double)t.Amount) -
+                         g.Where(t => t.Type == TransactionsStatus.Outflow).Sum(t => (double)t.Amount)
+            })
+            .ToList();
+    }
 
-        return new List<ChartSeries>
+    private void LoadTransactionFlowChart(List<MonthlyTransactionData> monthlyData)
+    {
+        _monthLabels = monthlyData.Select(d => d.YearMonth).ToArray();
+        _transactionFlowSeries = new List<ChartSeries>
         {
-            new ChartSeries { Name = "Net Balance", Data = monthlyData.Select(d => (double)d.Balance).ToArray() }
+            new ChartSeries { Name = "Income", Data = monthlyData.Select(d => d.Inflow).ToArray() },
+            new ChartSeries { Name = "Expenses", Data = monthlyData.Select(d => d.Outflow).ToArray() },
+            new ChartSeries { Name = "Balance", Data = monthlyData.Select(d => d.Balance).ToArray() }
         };
     }
 
-    private string[] GetMonthLabels()
+    private void LoadIncomeExpensesChart(List<MonthlyTransactionData> monthlyData)
     {
-        return Transactions.GroupBy(t => new { t.Date.Year, t.Date.Month })
-                          .OrderBy(g => g.Key.Year)
-                          .ThenBy(g => g.Key.Month)
-                          .Select(g => $"{g.Key.Year}/{g.Key.Month:00}")
-                          .ToArray();
+        _incomeVsExpensesSeries = new List<ChartSeries>
+        {
+            new ChartSeries { Name = "Income", Data = monthlyData.Select(d => d.Inflow).ToArray() },
+            new ChartSeries { Name = "Expenses", Data = monthlyData.Select(d => d.Outflow).ToArray() }
+        };
+    }
+
+    private void LoadDebtDistributionChart()
+    {
+        var debtData = new[]
+        {
+            ("Pending", Transactions.Where(t => t.Type == TransactionsStatus.Debt && t.DebtsStatus == DebtsStatus.Pending)),
+            ("Paid", Transactions.Where(t => t.Type == TransactionsStatus.Debt && t.DebtsStatus == DebtsStatus.Paid)),
+            ("Overdue", Transactions.Where(t => t.Type == TransactionsStatus.Debt && t.DebtsStatus == DebtsStatus.Overdue))
+        }
+        .Select(x => (x.Item1, Amount: x.Item2.Sum(t => (double)t.Amount)))
+        .Where(x => x.Amount > 0)
+        .ToList();
+
+        _debtDistributionData = debtData.Select(x => x.Amount).ToArray();
+        _debtStatusLabels = debtData.Select(x => x.Item1).ToArray();
+    }
+
+    private void LoadCategorySpendingChart()
+    {
+        var categorySpending = Transactions
+            .Where(t => t.Type == TransactionsStatus.Outflow)
+            .GroupBy(t => t.Tags.FirstOrDefault() ?? "Uncategorized")
+            .Select(g => new { Category = g.Key, Amount = (double)g.Sum(t => t.Amount) })
+            .Where(x => x.Amount > 0)
+            .OrderByDescending(x => x.Amount)
+            .ToList();
+
+        _categorySpendingData = categorySpending.Select(c => c.Amount).ToArray();
+        _categoryLabels = categorySpending.Select(c => c.Category).ToArray();
+    }
+
+    private class MonthlyTransactionData
+    {
+        public string YearMonth { get; set; }
+        public double Inflow { get; set; }
+        public double Outflow { get; set; }
+        public double Balance { get; set; }
     }
 }

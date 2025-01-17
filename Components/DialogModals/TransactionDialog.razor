@@ -27,14 +27,29 @@
                             </MudItem>
 
                             <MudItem xs="12">
-                                <MudSelect T="string" Label="Income Category"
-                                           MultiSelection="true"
-                                           @bind-SelectedValues="inflowSelectedTags">
-                                    @foreach (var tag in InflowTags)
-                                    {
+                                <MudStack>
+                                    <MudSelect T="string" Label="Income Category"
+                                               MultiSelection="true"
+                                               @bind-SelectedValues="inflowSelectedTags">
+                                        @foreach (var tag in InflowTags)
+                                        {
                                         <MudSelectItem Value="@tag">@tag</MudSelectItem>
-                                    }
-                                </MudSelect>
+                                        }
+                                    </MudSelect>
+                                    <MudGrid>
+                                        <MudItem xs="9">
+                                            <MudTextField @bind-Value="newInflowTag"
+                                                          Label="Add Custom Category"
+                                                          Variant="Variant.Outlined"/>
+                                        </MudItem>
+                                        <MudItem xs="3" Class="d-flex align-center">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                           Color="Color.Primary"
+                                                           OnClick="() => AddCustomTag(TransactionsStatus.Inflow)"
+                                                           Size="Size.Small"/>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudStack>
                             </MudItem>
 
                             @CommonFields(inflowTransaction, inflowSelectedDate)
@@ -62,14 +77,29 @@
                             </MudItem>
 
                             <MudItem xs="12">
-                                <MudSelect T="string" Label="Expense Tags"
-                                           MultiSelection="true"
-                                           @bind-SelectedValues="outflowSelectedTags">
-                                    @foreach (var tag in OutflowTags)
-                                    {
+                                <MudStack>
+                                    <MudSelect T="string" Label="Expense Tags"
+                                               MultiSelection="true"
+                                               @bind-SelectedValues="outflowSelectedTags">
+                                        @foreach (var tag in OutflowTags)
+                                        {
                                         <MudSelectItem Value="@tag">@tag</MudSelectItem>
-                                    }
-                                </MudSelect>
+                                        }
+                                    </MudSelect>
+                                    <MudGrid>
+                                        <MudItem xs="9">
+                                            <MudTextField @bind-Value="newOutflowTag"
+                                                          Label="Add Custom Tag"
+                                                          Variant="Variant.Outlined"/>
+                                        </MudItem>
+                                        <MudItem xs="3" Class="d-flex align-center">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                           Color="Color.Primary"
+                                                           OnClick="() => AddCustomTag(TransactionsStatus.Outflow)"
+                                                           Size="Size.Small"/>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudStack>
                             </MudItem>
 
                             @CommonFields(outflowTransaction, outflowSelectedDate)
@@ -103,16 +133,30 @@
                             </MudItem>
 
                             <MudItem xs="12">
-                                <MudSelect T="string" Label="Debt Type"
-                                           MultiSelection="true"
-                                           @bind-SelectedValues="debtSelectedTags">
-                                    @foreach (var tag in DebtTags)
-                                    {
-                                        <MudSelectItem Value="@tag">@tag</MudSelectItem>
-                                    }
-                                </MudSelect>
+                                <MudStack>
+                                    <MudSelect T="string" Label="Debt Type"
+                                               MultiSelection="true"
+                                               @bind-SelectedValues="debtSelectedTags">
+                                        @foreach (var tag in DebtTags)
+                                        {
+                                            <MudSelectItem Value="@tag">@tag</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                    <MudGrid>
+                                        <MudItem xs="9">
+                                            <MudTextField @bind-Value="newDebtTag"
+                                                          Label="Add Custom Type"
+                                                          Variant="Variant.Outlined"/>
+                                        </MudItem>
+                                        <MudItem xs="3" Class="d-flex align-center">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                           Color="Color.Primary"
+                                                           OnClick="() => AddCustomTag(TransactionsStatus.Debt)"
+                                                           Size="Size.Small"/>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudStack>
                             </MudItem>
-
                             @CommonFields(debtTransaction, debtSelectedDate)
                         </MudGrid>
                     </EditForm>
@@ -127,344 +171,265 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+[CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
 
-    private int activeTabIndex = 0;
+private int activeTabIndex = 0;
 
-// Separate models for each transaction type
-    private Transaction inflowTransaction = new() { Date = DateTime.Today };
-    private Transaction outflowTransaction = new() { Date = DateTime.Today };
-    private Transaction debtTransaction = new() { Date = DateTime.Today };
+// Transaction models
+private Transaction inflowTransaction = new() { Date = DateTime.Today };
+private Transaction outflowTransaction = new() { Date = DateTime.Today };
+private Transaction debtTransaction = new() { Date = DateTime.Today };
 
-// Separate collections for selected tags
-    private IEnumerable<string> inflowSelectedTags = new List<string>();
-    private IEnumerable<string> outflowSelectedTags = new List<string>();
-    private IEnumerable<string> debtSelectedTags = new List<string>();
+// Selected tags collections
+private IEnumerable<string> inflowSelectedTags = new List<string>();
+private IEnumerable<string> outflowSelectedTags = new List<string>();
+private IEnumerable<string> debtSelectedTags = new List<string>();
 
-// Separate date fields
-    private DateTime? inflowSelectedDate = DateTime.Today;
-    private DateTime? outflowSelectedDate = DateTime.Today;
-    private DateTime? debtSelectedDate = DateTime.Today;
-    private DateTime? debtDueDate;
+// Custom tag input fields
+private string newInflowTag = string.Empty;
+private string newOutflowTag = string.Empty;
+private string newDebtTag = string.Empty;
 
-// Predefined tags for each transaction type
-    private List<string> InflowTags = new()
-    {
-        "Salary",
-        "Investment",
-        "Bonus",
-        "Refund",
-        "Side Income"
-    };
+// Date fields
+private DateTime? inflowSelectedDate = DateTime.Today;
+private DateTime? outflowSelectedDate = DateTime.Today;
+private DateTime? debtSelectedDate = DateTime.Today;
+private DateTime? debtDueDate;
 
-    private List<string> OutflowTags = new()
-    {
-        "Housing",
-        "Food",
-        "Transportation",
-        "Bills",
-        "Entertainment",
-        "Shopping"
-    };
+// Predefined tags
+private List<string> InflowTags = new()
+{
+"Salary",
+"Investment",
+"Bonus",
+"Refund",
+"Side Income"
+};
 
-    private List<string> DebtTags = new()
-    {
-        "Loan",
-        "Credit Card",
-        "Mortgage",
-        "Personal Debt",
-        "Student Loan"
-    };
+private List<string> OutflowTags = new()
+{
+"Housing",
+"Food",
+"Transportation",
+"Bills",
+"Entertainment",
+"Shopping"
+};
 
-// Common fields template shared across all transaction types
-    private RenderFragment CommonFields(Transaction transaction, DateTime? selectedDate) => __builder =>
-    {
-        <MudItem xs="12">
-            <MudTextField @bind-Value="transaction.Description"
-                          Label="Description"
-                          Required="true"
-                          Lines="2"/>
-        </MudItem>
+private List<string> DebtTags = new()
+{
+"Loan",
+"Credit Card",
+"Mortgage",
+"Personal Debt",
+"Student Loan"
+};
 
-        <MudItem xs="12" md="6">
-            <MudDatePicker @bind-Date="selectedDate"
-                           Label="Transaction Date"
-                           Required="true"/>
-        </MudItem>
+protected override async Task OnInitializedAsync()
+{
+if (MudDialog is null)
+throw new Exception("MudDialog instance not found");
 
-        <MudItem xs="12">
-            <MudTextField @bind-Value="transaction.Notes"
-                          Label="Notes"
-                          Lines="2"/>
-        </MudItem>
-    };
+// Load tags from service
+await LoadTagsFromService();
+InitializeTransactions();
+}
 
-    protected override void OnInitialized()
-    {
-        if (MudDialog is null)
-            throw new Exception("MudDialog instance not found");
+private async Task LoadTagsFromService()
+{
+await transactionService.InitializeAsync();
+var predefinedTags = transactionService.PredefinedTags.ToList();
 
-// Initialize all transaction models
-        InitializeTransactions();
-    }
+// Merge predefined tags with existing tag lists
+InflowTags = InflowTags.Union(predefinedTags.Where(t => t.StartsWith("Income_"))).ToList();
+OutflowTags = OutflowTags.Union(predefinedTags.Where(t => t.StartsWith("Expense_"))).ToList();
+DebtTags = DebtTags.Union(predefinedTags.Where(t => t.StartsWith("Debt_"))).ToList();
+}
 
-    private void InitializeTransactions()
-    {
-        inflowTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Inflow };
-        outflowTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Outflow };
-        debtTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Debt };
-        
-        inflowSelectedTags = new List<string>();
-        outflowSelectedTags = new List<string>();
-        debtSelectedTags = new List<string>();
+private void InitializeTransactions()
+{
+inflowTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Inflow };
+outflowTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Outflow };
+debtTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Debt };
 
-        inflowSelectedDate = DateTime.Today;
-        outflowSelectedDate = DateTime.Today;
-        debtSelectedDate = DateTime.Today;
-        debtDueDate = null;
-    }
+inflowSelectedTags = new List<string>();
+outflowSelectedTags = new List<string>();
+debtSelectedTags = new List<string>();
 
-    private void HandleTabChange(int index)
-    {
-        activeTabIndex = index;
-    }
+inflowSelectedDate = DateTime.Today;
+outflowSelectedDate = DateTime.Today;
+debtSelectedDate = DateTime.Today;
+debtDueDate = null;
+}
 
-    private async Task HandleSubmit(TransactionsStatus type)
-    {
-        Transaction currentTransaction;
-        DateTime? currentDate;
-        IEnumerable<string> currentTags;
+private RenderFragment CommonFields(Transaction transaction, DateTime? selectedDate) => __builder =>
+{
+<MudItem xs="12">
+    <MudTextField @bind-Value="transaction.Description"
+                  Label="Description"
+                  Required="true"
+                  Lines="2"/>
+</MudItem>
 
-        switch (type)
-        {
-            case TransactionsStatus.Inflow:
-                currentTransaction = inflowTransaction;
-                currentDate = inflowSelectedDate;
-                currentTags = inflowSelectedTags;
-                break;
-            case TransactionsStatus.Outflow:
-                currentTransaction = outflowTransaction;
-                currentDate = outflowSelectedDate;
-                currentTags = outflowSelectedTags;
-                break;
-            default:
-                currentTransaction = debtTransaction;
-                currentDate = debtSelectedDate;
-                currentTags = debtSelectedTags;
-                break;
-        }
+<MudItem xs="12" md="6">
+    <MudDatePicker @bind-Date="selectedDate"
+                   Label="Transaction Date"
+                   Required="true"/>
+</MudItem>
 
-        if (!currentDate.HasValue)
-        {
-            Snackbar.Add("Transaction date is required.", Severity.Error);
-            return;
-        }
+<MudItem xs="12">
+    <MudTextField @bind-Value="transaction.Notes"
+                  Label="Notes"
+                  Lines="2"/>
+</MudItem>
+};
 
-        currentTransaction.Date = currentDate.Value;
-        currentTransaction.Type = type;
+private async Task AddCustomTag(TransactionsStatus type)
+{
+string newTag = string.Empty;
+List<string> targetTagList;
+IEnumerable<string> selectedTags;
 
-        if (currentTransaction.Type == TransactionsStatus.Debt)
-        {
-            currentTransaction.DebtTakenDate = DateTime.Today;
-            currentTransaction.DebtDueDate = debtDueDate;
-            if (!debtDueDate.HasValue)
-            {
-                Snackbar.Add("Due date is required for debt transactions.", Severity.Error);
-                return;
-            }
+switch (type)
+{
+case TransactionsStatus.Inflow:
+newTag = $"Income_{newInflowTag.Trim()}";
+targetTagList = InflowTags;
+selectedTags = inflowSelectedTags;
+newInflowTag = string.Empty;
+break;
+case TransactionsStatus.Outflow:
+newTag = $"Expense_{newOutflowTag.Trim()}";
+targetTagList = OutflowTags;
+selectedTags = outflowSelectedTags;
+newOutflowTag = string.Empty;
+break;
+default:
+newTag = $"Debt_{newDebtTag.Trim()}";
+targetTagList = DebtTags;
+selectedTags = debtSelectedTags;
+newDebtTag = string.Empty;
+break;
+}
 
-            Console.WriteLine(currentTransaction.GetType());
-        }
+if (string.IsNullOrWhiteSpace(newTag))
+{
+Snackbar.Add("Tag cannot be empty.", Severity.Warning);
+return;
+}
 
-        currentTransaction.Tags = currentTags.ToList();
-        MudDialog.Close(DialogResult.Ok(currentTransaction));
-    }
+if (targetTagList.Contains(newTag))
+{
+Snackbar.Add("Tag already exists.", Severity.Warning);
+return;
+}
 
-    private void SubmitCurrentForm()
-    {
-        switch (activeTabIndex)
-        {
-            case 0:
-                HandleSubmit(TransactionsStatus.Inflow);
-                break;
-            case 1:
-                HandleSubmit(TransactionsStatus.Outflow);
-                break;
-            case 2:
-                HandleSubmit(TransactionsStatus.Debt);
-                break;
-        }
-    }
+targetTagList.Add(newTag);
+await transactionService.AddTag(newTag);
 
-    private void Cancel()
-    {
-        MudDialog.Cancel();
-    }
+var updatedTags = selectedTags.ToList();
+updatedTags.Add(newTag);
 
+switch (type)
+{
+case TransactionsStatus.Inflow:
+inflowSelectedTags = updatedTags;
+break;
+case TransactionsStatus.Outflow:
+outflowSelectedTags = updatedTags;
+break;
+default:
+debtSelectedTags = updatedTags;
+break;
+}
+
+StateHasChanged();
+Snackbar.Add("Tag added successfully.", Severity.Success);
+}
+
+private void HandleTabChange(int index)
+{
+activeTabIndex = index;
+}
+
+private async Task HandleSubmit(TransactionsStatus type)
+{
+    
+Transaction currentTransaction;
+DateTime? currentDate;
+IEnumerable<string> currentTags;
+
+switch (type)
+{
+case TransactionsStatus.Inflow:
+currentTransaction = inflowTransaction;
+currentDate = inflowSelectedDate;
+currentTags = inflowSelectedTags;
+break;
+case TransactionsStatus.Outflow:
+currentTransaction = outflowTransaction;
+currentDate = outflowSelectedDate;
+currentTags = outflowSelectedTags;
+break;
+default:
+currentTransaction = debtTransaction;
+currentDate = debtSelectedDate;
+currentTags = debtSelectedTags;
+break;
+}
+
+if (!currentDate.HasValue)
+{
+Snackbar.Add("Transaction date is required.", Severity.Error);
+return;
 }
 
 
 
-@* <MudDialog DisableSidePadding="true"> *@
-@*     <DialogContent> *@
-@*         <MudContainer Style="max-height: 600px; overflow-y: auto"> *@
-@*             <EditForm Model="@transaction" OnValidSubmit="HandleSubmit"> *@
-@*                 <DataAnnotationsValidator/> *@
-@*                 <MudGrid> *@
-@*                     <!-- Amount --> *@
-@*                     <MudItem xs="12" md="6"> *@
-@*                         <MudTextField @bind-Value="transaction.Amount" *@
-@*                                     Label="Amount" *@
-@*                                     Required="true" *@
-@*                                     Adornment="Adornment.Start" *@
-@*                                     AdornmentText="$"/> *@
-@*                     </MudItem> *@
-@* *@
-@*                     <!-- Type --> *@
-@*                     <MudItem xs="12" md="6"> *@
-@*                         <MudSelect T="TransactionType" @bind-Value="transaction.Type" *@
-@*                                  Label="Type" Required="true"> *@
-@*                             <MudSelectItem Value="@TransactionType.Inflow">Inflow</MudSelectItem> *@
-@*                             <MudSelectItem Value="@TransactionType.Outflow">Outflow</MudSelectItem> *@
-@*                         </MudSelect> *@
-@*                     </MudItem> *@
-@* *@
-@*                     <!-- Source --> *@
-@*                     <MudItem xs="12"> *@
-@*                         <MudTextField @bind-Value="transaction.Source" *@
-@*                                     Label="Source" *@
-@*                                     Required="true"/> *@
-@*                     </MudItem> *@
-@* *@
-@*                     <!-- Description --> *@
-@*                     <MudItem xs="12"> *@
-@*                         <MudTextField @bind-Value="transaction.Description" *@
-@*                                     Label="Description" *@
-@*                                     Required="true" *@
-@*                                     Lines="2"/> *@
-@*                     </MudItem> *@
-@* *@
-@*                     <!-- Date --> *@
-@*                     <MudItem xs="12" md="6"> *@
-@*                         <MudDatePicker @bind-Date="selectedDate" *@
-@*                                      Label="Date" *@
-@*                                      Required="true"/> *@
-@*                     </MudItem> *@
-@* *@
-@*                     <!-- Notes --> *@
-@*                     <MudItem xs="12"> *@
-@*                         <MudTextField @bind-Value="transaction.Notes" *@
-@*                                     Label="Notes" *@
-@*                                     Lines="2"/> *@
-@*                     </MudItem> *@
-@* *@
-@*                     <!-- Tags --> *@
-@*                     <MudItem xs="12"> *@
-@*                         <MudSelect T="string" Label="Tags" *@
-@*                                  MultiSelection="true" *@
-@*                                  @bind-SelectedValues="selectedTags"> *@
-@*                             @foreach (var tag in PredefinedTags) *@
-@*                             { *@
-@*                                 <MudSelectItem Value="@tag">@tag</MudSelectItem> *@
-@*                             } *@
-@*                         </MudSelect> *@
-@*                     </MudItem> *@
-@* *@
-@*                     <!-- Is Debt --> *@
-@*                     <MudItem xs="12"> *@
-@*                         <MudButton OnClick="ConvertDebtStatus"  *@
-@*                                  Color="Color.Primary" *@
-@*                                  Variant="@(isDebtSelected ? Variant.Filled : Variant.Outlined)"> *@
-@*                             Is Debt? *@
-@*                         </MudButton> *@
-@*                     </MudItem> *@
-@* *@
-@*                     @if (isDebtSelected) *@
-@*                     { *@
-@*                         <!-- Debt Due Date --> *@
-@*                         <MudItem xs="12" md="6"> *@
-@*                             <MudDatePicker @bind-Date="selectedDebtDueDate" *@
-@*                                          Label="Debt Due Date" *@
-@*                                          Required="true"/> *@
-@*                         </MudItem> *@
-@*                     } *@
-@*                 </MudGrid> *@
-@*             </EditForm> *@
-@*         </MudContainer> *@
-@*     </DialogContent> *@
-@*     <DialogActions> *@
-@*         <MudButton OnClick="Cancel">Cancel</MudButton> *@
-@*         <MudButton Color="Color.Primary" OnClick="HandleSubmit">Save</MudButton> *@
-@*     </DialogActions> *@
-@* </MudDialog> *@
-@* *@
-@* @code { *@
-@*     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!; *@
-@* *@
-@*     private Transaction transaction = new() { Date = DateTime.Today }; *@
-@*     private IEnumerable<string> selectedTags = new List<string>(); *@
-@*     private bool isDebtSelected = false; *@
-@*     private DateTime? selectedDate = DateTime.Today; *@
-@*     private DateTime? selectedDebtDueDate; *@
-@* *@
-@*     public List<string> PredefinedTags { get; } = new() *@
-@*     { *@
-@*         "Income", *@
-@*         "Housing", *@
-@*         "Food", *@
-@*         "Savings", *@
-@*         "Shopping", *@
-@*         "Bills", *@
-@*         "Entertainment" *@
-@*     }; *@
-@* *@
-@*      *@
-@*     protected override void OnInitialized() *@
-@*     { *@
-@*         if (MudDialog is null) *@
-@*             throw new Exception("MudDialog instance not found"); *@
-@*     } *@
-@*      *@
-@*     private void ConvertDebtStatus() *@
-@*     { *@
-@*         isDebtSelected = !isDebtSelected; *@
-@*         if (!isDebtSelected) *@
-@*         { *@
-@*             selectedDebtDueDate = null; *@
-@*             transaction.DebtDueDate = null; *@
-@*             transaction.IsDebt = false; *@
-@*         } *@
-@*         else *@
-@*         { *@
-@*             transaction.IsDebt = true; *@
-@*         } *@
-@*     } *@
-@* *@
-@*     private async Task HandleSubmit() *@
-@*     { *@
-@*         if (!selectedDate.HasValue) *@
-@*         { *@
-@*             Snackbar.Add("Transaction date is required.", Severity.Error); *@
-@*             return; *@
-@*         } *@
-@* *@
-@*         transaction.Date = selectedDate.Value; *@
-@* *@
-@*         if (isDebtSelected) *@
-@*         { *@
-@*             if (!selectedDebtDueDate.HasValue) *@
-@*             { *@
-@*                 Snackbar.Add("Due dates are required for debt transactions.", Severity.Error); *@
-@*                 return; *@
-@*             } *@
-@* *@
-@*             transaction.DebtDueDate = selectedDebtDueDate; *@
-@*         } *@
-@* *@
-@*         transaction.Tags = selectedTags.ToList(); *@
-@*         MudDialog.Close(DialogResult.Ok(transaction)); *@
-@*     } *@
-@* *@
-@*     private void Cancel() => MudDialog.Cancel(); *@
-@* } *@
-@* *@
+
+Console.WriteLine($"Saving transaction with DebtsStatus: {currentTransaction.DebtsStatus}");
+
+
+
+
+currentTransaction.Date = currentDate.Value;
+currentTransaction.Type = type;
+
+if (currentTransaction.Type == TransactionsStatus.Debt)
+{
+currentTransaction.DebtTakenDate = DateTime.Today;
+currentTransaction.DebtDueDate = debtDueDate;
+if (!debtDueDate.HasValue)
+{
+Snackbar.Add("Due date is required for debt transactions.", Severity.Error);
+return;
+}
+}
+
+currentTransaction.Tags = currentTags.ToList();
+await transactionService.AddTransaction(currentTransaction);
+MudDialog.Close(DialogResult.Ok(currentTransaction));
+}
+
+private void SubmitCurrentForm()
+{
+switch (activeTabIndex)
+{
+case 0:
+HandleSubmit(TransactionsStatus.Inflow);
+break;
+case 1:
+HandleSubmit(TransactionsStatus.Outflow);
+break;
+case 2:
+HandleSubmit(TransactionsStatus.Debt);
+break;
+}
+}
+
+private void Cancel()
+{
+MudDialog.Cancel();
+}
+
+}
