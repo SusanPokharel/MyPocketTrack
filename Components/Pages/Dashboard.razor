@@ -210,11 +210,6 @@
         <MudTable Items="@PendingDebts" Dense="false" Hover="true" Bordered="true" Striped="true">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Pending Debts</MudText>
-                <MudSpacer/>
-                <MudButton Color="Color.Primary" OnClick="@(() => SortPendingDebts("Amount"))">Sort by Amount</MudButton>
-                <MudButton Color="Color.Primary" OnClick="@(() => SortPendingDebts("DebtTakenDate"))">Sort by Debt Taken Date</MudButton>
-                <MudButton Color="Color.Primary" OnClick="@(() => SortPendingDebts("DebtDueDate"))">Sort by Debt Due Date</MudButton>
-                <MudButton Color="Color.Secondary" OnClick="ClearFilters">Clear Filters</MudButton>
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>Amount</MudTh>
@@ -307,55 +302,7 @@
             DebtsStatus.Overdue => Color.Error,
             _ => Color.Warning
         };
-
-    private void ClearFilters()
-    {
-        FilterType = string.Empty;
-        FilterTag = string.Empty;
-        SearchText = string.Empty;
-        _dateRange = new DateRange();
-        StateHasChanged();
-    }
-
-
-    private string CurrentPendingDebtSortColumn { get; set; } = "Amount";
-    private bool IsPendingDebtSortDescending { get; set; } = false;
-
-    private IEnumerable<Transaction> SortedPendingDebts =>
-        ApplyPendingDebtSorting(
-            PendingDebts.Where(t =>
-                (string.IsNullOrEmpty(SearchText) ||
-                 t.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                 t.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) &&
-                (!_dateRange.Start.HasValue || t.DebtTakenDate >= _dateRange.Start.Value) &&
-                (!_dateRange.End.HasValue || t.DebtDueDate <= _dateRange.End.Value))
-        );
-
-    private IEnumerable<Transaction> ApplyPendingDebtSorting(IEnumerable<Transaction> debts)
-    {
-        return CurrentPendingDebtSortColumn switch
-        {
-            "Amount" => IsPendingDebtSortDescending ? debts.OrderByDescending(d => d.Amount) : debts.OrderBy(d => d.Amount),
-            "DebtTakenDate" => IsPendingDebtSortDescending ? debts.OrderByDescending(d => d.DebtTakenDate) : debts.OrderBy(d => d.DebtTakenDate),
-            "DebtDueDate" => IsPendingDebtSortDescending ? debts.OrderByDescending(d => d.DebtDueDate) : debts.OrderBy(d => d.DebtDueDate),
-            _ => debts
-        };
-    }
-
-    private void SortPendingDebts(string column)
-    {
-        if (CurrentPendingDebtSortColumn == column)
-        {
-            IsPendingDebtSortDescending = !IsPendingDebtSortDescending; // Toggle sort order
-        }
-        else
-        {
-            CurrentPendingDebtSortColumn = column;
-            IsPendingDebtSortDescending = false; // Default to ascending when column changes
-        }
-
-        StateHasChanged(); // Refresh the UI
-    }
+    
 
     private string GetDebtStatusText(DebtsStatus? status)
     {

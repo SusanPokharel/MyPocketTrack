@@ -84,10 +84,12 @@
     
     <!-- Main Transactions Table -->
     <MudPaper Elevation="3" Class="p-4 mb-10">
-        <MudTable Items="@FilteredTransactions" Dense="false" Hover="true" Bordered="true" Striped="true" Filter="FilterFunc">
+        <MudTable Items="@FilteredAndSortedTransactions" Dense="false" Hover="true" Bordered="true" Striped="true">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">All Transactions</MudText>
                 <MudSpacer/>
+                <MudButton Color="Color.Primary" OnClick="@(() => SortTransactions("Amount"))">Sort by Amount</MudButton>
+                <MudButton Color="Color.Primary" OnClick="@(() => SortTransactions("Date"))">Sort by Date</MudButton>
                 <MudButton Color="Color.Primary" OnClick="OpenDialogAsync" StartIcon="@Icons.Material.Filled.Add">Add Transaction</MudButton>
                 <MudButton Color="Color.Primary" OnClick="ClearFilters" StartIcon="@Icons.Material.Filled.FilterList">Clear Filters</MudButton>
             </ToolBarContent>
@@ -117,26 +119,55 @@
     private string SearchText = string.Empty;
     private DateRange _dateRange = new();
 
+    private string CurrentSortColumn { get; set; } = "Amount";
+    private bool IsSortDescending { get; set; } = false;
+
     private IEnumerable<Models.Transaction> TopHighestTransactions => TransactionService.GetTopHighestTransactions(5);
     private IEnumerable<Models.Transaction> TopLowestTransactions => TransactionService.GetTopLowestTransactions(5);
 
-    private IEnumerable<Models.Transaction> FilteredTransactions => TransactionService.GetTransactions()
-        .Where(t =>
-            (string.IsNullOrEmpty(FilterType) || t.Type.ToString() == FilterType || (FilterType == "Debt" && t.IsDebt)) &&
-            (string.IsNullOrEmpty(FilterTag) || t.Tags.Contains(FilterTag)) &&
-            (string.IsNullOrEmpty(SearchText) ||
-             t.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-             t.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+    // Combined filtering and sorting
+    private IEnumerable<Models.Transaction> FilteredAndSortedTransactions =>
+        ApplySorting(
+            TransactionService.GetTransactions()
+                .Where(t =>
+                    (string.IsNullOrEmpty(FilterType) || t.Type.ToString() == FilterType || (FilterType == "Debt" && t.IsDebt)) &&
+                    (string.IsNullOrEmpty(FilterTag) || t.Tags.Contains(FilterTag)) &&
+                    (!_dateRange.Start.HasValue || t.Date >= _dateRange.Start.Value) &&
+                    (!_dateRange.End.HasValue || t.Date <= _dateRange.End.Value) &&
+                    (string.IsNullOrEmpty(SearchText) ||
+                     t.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                     t.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase)))
+        );
 
-    private bool FilterFunc(Models.Transaction transaction) =>
-        string.IsNullOrEmpty(SearchText) ||
-        transaction.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-        transaction.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+    private IEnumerable<Models.Transaction> ApplySorting(IEnumerable<Models.Transaction> transactions)
+    {
+        return CurrentSortColumn switch
+        {
+            "Amount" => IsSortDescending ? transactions.OrderByDescending(t => t.Amount) : transactions.OrderBy(t => t.Amount),
+            "Date" => IsSortDescending ? transactions.OrderByDescending(t => t.Date) : transactions.OrderBy(t => t.Date),
+            _ => transactions
+        };
+    }
+
+    private void SortTransactions(string column)
+    {
+        if (CurrentSortColumn == column)
+        {
+            IsSortDescending = !IsSortDescending; // Toggle sort order
+        }
+        else
+        {
+            CurrentSortColumn = column;
+            IsSortDescending = false; // Default to ascending when column changes
+        }
+
+        StateHasChanged(); // Refresh the UI
+    }
 
     private async Task OpenDialogAsync()
     {
-        var options = new DialogOptions 
-        { 
+        var options = new DialogOptions
+        {
             CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
@@ -144,7 +175,7 @@
 
         var dialog = await DialogService.ShowAsync<TransactionDialog>("Add Transaction", options);
         var result = await dialog.Result;
-        
+
         if (!result.Canceled)
         {
             var transaction = (Models.Transaction)result.Data;
