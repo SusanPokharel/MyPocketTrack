@@ -1,6 +1,84 @@
-@page "/Outflow"
-<h3>Outflow</h3>
+@page "/outflow"
+@using MyPocketTrack.Components.Models
+@using MyPocketTrack.Components.Services
+@inject TransactionService TransactionService
+@inject ISnackbar Snackbar
+
+<div class="container-fluid p-4">
+    <!-- Summary Card -->
+    <div class="row">
+        <div class="col-12 col-md-4 mb-4">
+            <div class="card shadow text-center" style="background: linear-gradient(135deg, #ff512f, #f09819); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title">Total Outflow</h5>
+                    <p class="card-text display-6">@TransactionService.TotalOutflow.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-4">
+            <div class="card shadow text-center" style="background: linear-gradient(135deg, #6a0572, #a05772); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title">Number of Outflow Transactions</h5>
+                    <p class="card-text display-6">@TransactionService.TotalOutflowCount</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Transactions -->
+    <div class="row">
+        <!-- Top 5 Highest Outflows -->
+        <div class="col-12 col-md-6 mb-4">
+            <MudPaper Elevation="3" Class="p-4">
+                <MudTable Items="@TopHighestOutflows" Dense="true" Hover="true" Bordered="true" Striped="true">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Top 5 Highest Outflows</MudText>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Amount</MudTh>
+                        <MudTh>Source</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Amount.ToString("C")</MudTd>
+                        <MudTd>@context.Source</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </div>
+
+        <!-- Top 5 Lowest Outflows -->
+        <div class="col-12 col-md-6 mb-4">
+            <MudPaper Elevation="3" Class="p-4">
+                <MudTable Items="@TopLowestOutflows" Dense="true" Hover="true" Bordered="true" Striped="true">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Top 5 Lowest Outflows</MudText>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Amount</MudTh>
+                        <MudTh>Source</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Amount.ToString("C")</MudTd>
+                        <MudTd>@context.Source</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </div>
+    </div>
+</div>
 
 @code {
-    
+    private IEnumerable<Transaction> TopHighestOutflows => TransactionService.GetTransactions()
+        .Where(t => t.Type == TransactionsStatus.Outflow)
+        .OrderByDescending(t => t.Amount)
+        .Take(5);
+
+    private IEnumerable<Transaction> TopLowestOutflows => TransactionService.GetTransactions()
+        .Where(t => t.Type == TransactionsStatus.Outflow)
+        .OrderBy(t => t.Amount)
+        .Take(5);
 }
