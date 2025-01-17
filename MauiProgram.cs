@@ -15,11 +15,13 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
         
+        var transactionService = new TransactionService();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
-    
+        builder.Services.AddSingleton(transactionService);
+        builder.Services.AddSingleton<TransactionService>();
 #endif
         builder.Services.AddMudServices();
         builder.Services.AddMudServices(config =>
