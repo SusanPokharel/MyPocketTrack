@@ -33,7 +33,7 @@
                                                @bind-SelectedValues="inflowSelectedTags">
                                         @foreach (var tag in InflowTags)
                                         {
-                                        <MudSelectItem Value="@tag">@tag</MudSelectItem>
+                                            <MudSelectItem Value="@tag">@tag</MudSelectItem>
                                         }
                                     </MudSelect>
                                     <MudGrid>
@@ -83,7 +83,7 @@
                                                @bind-SelectedValues="outflowSelectedTags">
                                         @foreach (var tag in OutflowTags)
                                         {
-                                        <MudSelectItem Value="@tag">@tag</MudSelectItem>
+                                            <MudSelectItem Value="@tag">@tag</MudSelectItem>
                                         }
                                     </MudSelect>
                                     <MudGrid>
@@ -171,265 +171,260 @@
 </MudDialog>
 
 @code {
-[CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
 
-private int activeTabIndex = 0;
+    private int activeTabIndex = 0;
 
 // Transaction models
-private Transaction inflowTransaction = new() { Date = DateTime.Today };
-private Transaction outflowTransaction = new() { Date = DateTime.Today };
-private Transaction debtTransaction = new() { Date = DateTime.Today };
+    private Transaction inflowTransaction = new() { Date = DateTime.Today };
+    private Transaction outflowTransaction = new() { Date = DateTime.Today };
+    private Transaction debtTransaction = new() { Date = DateTime.Today };
 
 // Selected tags collections
-private IEnumerable<string> inflowSelectedTags = new List<string>();
-private IEnumerable<string> outflowSelectedTags = new List<string>();
-private IEnumerable<string> debtSelectedTags = new List<string>();
+    private IEnumerable<string> inflowSelectedTags = new List<string>();
+    private IEnumerable<string> outflowSelectedTags = new List<string>();
+    private IEnumerable<string> debtSelectedTags = new List<string>();
 
 // Custom tag input fields
-private string newInflowTag = string.Empty;
-private string newOutflowTag = string.Empty;
-private string newDebtTag = string.Empty;
+    private string newInflowTag = string.Empty;
+    private string newOutflowTag = string.Empty;
+    private string newDebtTag = string.Empty;
 
 // Date fields
-private DateTime? inflowSelectedDate = DateTime.Today;
-private DateTime? outflowSelectedDate = DateTime.Today;
-private DateTime? debtSelectedDate = DateTime.Today;
-private DateTime? debtDueDate;
+    private DateTime? inflowSelectedDate = DateTime.Today;
+    private DateTime? outflowSelectedDate = DateTime.Today;
+    private DateTime? debtSelectedDate = DateTime.Today;
+    private DateTime? debtDueDate;
 
 // Predefined tags
-private List<string> InflowTags = new()
-{
-"Salary",
-"Investment",
-"Bonus",
-"Refund",
-"Side Income"
-};
+    private List<string> InflowTags = new()
+    {
+        "Salary",
+        "Investment",
+        "Bonus",
+        "Refund",
+        "Side Income"
+    };
 
-private List<string> OutflowTags = new()
-{
-"Housing",
-"Food",
-"Transportation",
-"Bills",
-"Entertainment",
-"Shopping"
-};
+    private List<string> OutflowTags = new()
+    {
+        "Housing",
+        "Food",
+        "Transportation",
+        "Bills",
+        "Entertainment",
+        "Shopping"
+    };
 
-private List<string> DebtTags = new()
-{
-"Loan",
-"Credit Card",
-"Mortgage",
-"Personal Debt",
-"Student Loan"
-};
+    private List<string> DebtTags = new()
+    {
+        "Loan",
+        "Credit Card",
+        "Mortgage",
+        "Personal Debt",
+        "Student Loan"
+    };
 
-protected override async Task OnInitializedAsync()
-{
-if (MudDialog is null)
-throw new Exception("MudDialog instance not found");
+    protected override async Task OnInitializedAsync()
+    {
+        if (MudDialog is null)
+            throw new Exception("MudDialog instance not found");
 
 // Load tags from service
-await LoadTagsFromService();
-InitializeTransactions();
-}
+        await LoadTagsFromService();
+        InitializeTransactions();
+    }
 
-private async Task LoadTagsFromService()
-{
-await transactionService.InitializeAsync();
-var predefinedTags = transactionService.PredefinedTags.ToList();
+    private async Task LoadTagsFromService()
+    {
+        await transactionService.InitializeAsync();
+        var predefinedTags = transactionService.PredefinedTags.ToList();
 
 // Merge predefined tags with existing tag lists
-InflowTags = InflowTags.Union(predefinedTags.Where(t => t.StartsWith("Income_"))).ToList();
-OutflowTags = OutflowTags.Union(predefinedTags.Where(t => t.StartsWith("Expense_"))).ToList();
-DebtTags = DebtTags.Union(predefinedTags.Where(t => t.StartsWith("Debt_"))).ToList();
-}
+        InflowTags = InflowTags.Union(predefinedTags.Where(t => t.StartsWith("Income_"))).ToList();
+        OutflowTags = OutflowTags.Union(predefinedTags.Where(t => t.StartsWith("Expense_"))).ToList();
+        DebtTags = DebtTags.Union(predefinedTags.Where(t => t.StartsWith("Debt_"))).ToList();
+    }
 
-private void InitializeTransactions()
-{
-inflowTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Inflow };
-outflowTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Outflow };
-debtTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Debt };
+    private void InitializeTransactions()
+    {
+        inflowTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Inflow };
+        outflowTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Outflow };
+        debtTransaction = new() { Date = DateTime.Today, Type = TransactionsStatus.Debt };
 
-inflowSelectedTags = new List<string>();
-outflowSelectedTags = new List<string>();
-debtSelectedTags = new List<string>();
+        inflowSelectedTags = new List<string>();
+        outflowSelectedTags = new List<string>();
+        debtSelectedTags = new List<string>();
 
-inflowSelectedDate = DateTime.Today;
-outflowSelectedDate = DateTime.Today;
-debtSelectedDate = DateTime.Today;
-debtDueDate = null;
-}
+        inflowSelectedDate = DateTime.Today;
+        outflowSelectedDate = DateTime.Today;
+        debtSelectedDate = DateTime.Today;
+        debtDueDate = null;
+    }
 
-private RenderFragment CommonFields(Transaction transaction, DateTime? selectedDate) => __builder =>
-{
-<MudItem xs="12">
-    <MudTextField @bind-Value="transaction.Description"
-                  Label="Description"
-                  Required="true"
-                  Lines="2"/>
-</MudItem>
+    private RenderFragment CommonFields(Transaction transaction, DateTime? selectedDate) => __builder =>
+    {
+        <MudItem xs="12">
+            <MudTextField @bind-Value="transaction.Description"
+                          Label="Description"
+                          Required="true"
+                          Lines="2"/>
+        </MudItem>
 
-<MudItem xs="12" md="6">
-    <MudDatePicker @bind-Date="selectedDate"
-                   Label="Transaction Date"
-                   Required="true"/>
-</MudItem>
+        <MudItem xs="12" md="6">
+            <MudDatePicker @bind-Date="selectedDate"
+                           Label="Transaction Date"
+                           Required="true"/>
+        </MudItem>
 
-<MudItem xs="12">
-    <MudTextField @bind-Value="transaction.Notes"
-                  Label="Notes"
-                  Lines="2"/>
-</MudItem>
-};
+        <MudItem xs="12">
+            <MudTextField @bind-Value="transaction.Notes"
+                          Label="Notes"
+                          Lines="2"/>
+        </MudItem>
+    };
 
-private async Task AddCustomTag(TransactionsStatus type)
-{
-string newTag = string.Empty;
-List<string> targetTagList;
-IEnumerable<string> selectedTags;
+    private async Task AddCustomTag(TransactionsStatus type)
+    {
+        string newTag = string.Empty;
+        List<string> targetTagList;
+        IEnumerable<string> selectedTags;
 
-switch (type)
-{
-case TransactionsStatus.Inflow:
-newTag = $"Income_{newInflowTag.Trim()}";
-targetTagList = InflowTags;
-selectedTags = inflowSelectedTags;
-newInflowTag = string.Empty;
-break;
-case TransactionsStatus.Outflow:
-newTag = $"Expense_{newOutflowTag.Trim()}";
-targetTagList = OutflowTags;
-selectedTags = outflowSelectedTags;
-newOutflowTag = string.Empty;
-break;
-default:
-newTag = $"Debt_{newDebtTag.Trim()}";
-targetTagList = DebtTags;
-selectedTags = debtSelectedTags;
-newDebtTag = string.Empty;
-break;
-}
+        switch (type)
+        {
+            case TransactionsStatus.Inflow:
+                newTag = $"Income_{newInflowTag.Trim()}";
+                targetTagList = InflowTags;
+                selectedTags = inflowSelectedTags;
+                newInflowTag = string.Empty;
+                break;
+            case TransactionsStatus.Outflow:
+                newTag = $"Expense_{newOutflowTag.Trim()}";
+                targetTagList = OutflowTags;
+                selectedTags = outflowSelectedTags;
+                newOutflowTag = string.Empty;
+                break;
+            default:
+                newTag = $"Debt_{newDebtTag.Trim()}";
+                targetTagList = DebtTags;
+                selectedTags = debtSelectedTags;
+                newDebtTag = string.Empty;
+                break;
+        }
 
-if (string.IsNullOrWhiteSpace(newTag))
-{
-Snackbar.Add("Tag cannot be empty.", Severity.Warning);
-return;
-}
+        if (string.IsNullOrWhiteSpace(newTag))
+        {
+            Snackbar.Add("Tag cannot be empty.", Severity.Warning);
+            return;
+        }
 
-if (targetTagList.Contains(newTag))
-{
-Snackbar.Add("Tag already exists.", Severity.Warning);
-return;
-}
+        if (targetTagList.Contains(newTag))
+        {
+            Snackbar.Add("Tag already exists.", Severity.Warning);
+            return;
+        }
 
-targetTagList.Add(newTag);
-await transactionService.AddTag(newTag);
+        targetTagList.Add(newTag);
+        await transactionService.AddTag(newTag);
 
-var updatedTags = selectedTags.ToList();
-updatedTags.Add(newTag);
+        var updatedTags = selectedTags.ToList();
+        updatedTags.Add(newTag);
 
-switch (type)
-{
-case TransactionsStatus.Inflow:
-inflowSelectedTags = updatedTags;
-break;
-case TransactionsStatus.Outflow:
-outflowSelectedTags = updatedTags;
-break;
-default:
-debtSelectedTags = updatedTags;
-break;
-}
+        switch (type)
+        {
+            case TransactionsStatus.Inflow:
+                inflowSelectedTags = updatedTags;
+                break;
+            case TransactionsStatus.Outflow:
+                outflowSelectedTags = updatedTags;
+                break;
+            default:
+                debtSelectedTags = updatedTags;
+                break;
+        }
 
-StateHasChanged();
-Snackbar.Add("Tag added successfully.", Severity.Success);
-}
+        StateHasChanged();
+        Snackbar.Add("Tag added successfully.", Severity.Success);
+    }
 
-private void HandleTabChange(int index)
-{
-activeTabIndex = index;
-}
+    private void HandleTabChange(int index)
+    {
+        activeTabIndex = index;
+    }
 
-private async Task HandleSubmit(TransactionsStatus type)
-{
-    
-Transaction currentTransaction;
-DateTime? currentDate;
-IEnumerable<string> currentTags;
+    private async Task HandleSubmit(TransactionsStatus type)
+    {
+        Transaction currentTransaction;
+        DateTime? currentDate;
+        IEnumerable<string> currentTags;
 
-switch (type)
-{
-case TransactionsStatus.Inflow:
-currentTransaction = inflowTransaction;
-currentDate = inflowSelectedDate;
-currentTags = inflowSelectedTags;
-break;
-case TransactionsStatus.Outflow:
-currentTransaction = outflowTransaction;
-currentDate = outflowSelectedDate;
-currentTags = outflowSelectedTags;
-break;
-default:
-currentTransaction = debtTransaction;
-currentDate = debtSelectedDate;
-currentTags = debtSelectedTags;
-break;
-}
+        switch (type)
+        {
+            case TransactionsStatus.Inflow:
+                currentTransaction = inflowTransaction;
+                currentDate = inflowSelectedDate;
+                currentTags = inflowSelectedTags;
+                break;
+            case TransactionsStatus.Outflow:
+                currentTransaction = outflowTransaction;
+                currentDate = outflowSelectedDate;
+                currentTags = outflowSelectedTags;
+                break;
+            default:
+                currentTransaction = debtTransaction;
+                currentDate = debtSelectedDate;
+                currentTags = debtSelectedTags;
+                break;
+        }
 
-if (!currentDate.HasValue)
-{
-Snackbar.Add("Transaction date is required.", Severity.Error);
-return;
-}
-
+        if (!currentDate.HasValue)
+        {
+            Snackbar.Add("Transaction date is required.", Severity.Error);
+            return;
+        }
 
 
-
-Console.WriteLine($"Saving transaction with DebtsStatus: {currentTransaction.DebtsStatus}");
-
+        Console.WriteLine($"Saving transaction with DebtsStatus: {currentTransaction.DebtsStatus}");
 
 
+        currentTransaction.Date = currentDate.Value;
+        currentTransaction.Type = type;
 
-currentTransaction.Date = currentDate.Value;
-currentTransaction.Type = type;
+        if (currentTransaction.Type == TransactionsStatus.Debt)
+        {
+            currentTransaction.DebtTakenDate = DateTime.Today;
+            currentTransaction.DebtDueDate = debtDueDate;
+            if (!debtDueDate.HasValue)
+            {
+                Snackbar.Add("Due date is required for debt transactions.", Severity.Error);
+                return;
+            }
+        }
 
-if (currentTransaction.Type == TransactionsStatus.Debt)
-{
-currentTransaction.DebtTakenDate = DateTime.Today;
-currentTransaction.DebtDueDate = debtDueDate;
-if (!debtDueDate.HasValue)
-{
-Snackbar.Add("Due date is required for debt transactions.", Severity.Error);
-return;
-}
-}
+        currentTransaction.Tags = currentTags.ToList();
+        await transactionService.AddTransaction(currentTransaction);
+        MudDialog.Close(DialogResult.Ok(currentTransaction));
+    }
 
-currentTransaction.Tags = currentTags.ToList();
-await transactionService.AddTransaction(currentTransaction);
-MudDialog.Close(DialogResult.Ok(currentTransaction));
-}
+    private void SubmitCurrentForm()
+    {
+        switch (activeTabIndex)
+        {
+            case 0:
+                HandleSubmit(TransactionsStatus.Inflow);
+                break;
+            case 1:
+                HandleSubmit(TransactionsStatus.Outflow);
+                break;
+            case 2:
+                HandleSubmit(TransactionsStatus.Debt);
+                break;
+        }
+    }
 
-private void SubmitCurrentForm()
-{
-switch (activeTabIndex)
-{
-case 0:
-HandleSubmit(TransactionsStatus.Inflow);
-break;
-case 1:
-HandleSubmit(TransactionsStatus.Outflow);
-break;
-case 2:
-HandleSubmit(TransactionsStatus.Debt);
-break;
-}
-}
-
-private void Cancel()
-{
-MudDialog.Cancel();
-}
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
 
 }

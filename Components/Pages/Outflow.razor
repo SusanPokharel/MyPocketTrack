@@ -5,7 +5,7 @@
 @inject ISnackbar Snackbar
 
 <div class="container-fluid p-4">
-    <!-- Summary Card -->
+    <!-- Summary Cards -->
     <div class="row">
         <div class="col-12 col-md-4 mb-4">
             <div class="card shadow text-center" style="background: linear-gradient(135deg, #ff512f, #f09819); color: white;">
@@ -69,9 +69,62 @@
             </MudPaper>
         </div>
     </div>
+
+    <!-- Filters -->
+    <MudPaper Elevation="3" Class="p-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Tags" @bind-Value="FilterTag">
+                    @foreach (var tag in TransactionService.PredefinedTags)
+                    {
+                        <MudSelectItem Value="@tag">@tag</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange"/>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField @bind-Value="SearchText" Label="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"/>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Outflow Transactions Table -->
+    <MudPaper Elevation="3" Class="p-4">
+        <MudTable Items="@FilteredOutflows" Dense="false" Hover="true" Bordered="true" Striped="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Outflow Transactions</MudText>
+                <MudSpacer/>
+                <MudButton Color="Color.Primary" OnClick="ClearFilters">Clear Filters</MudButton>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Source</MudTh>
+                <MudTh>Amount</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Tags</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Source</MudTd>
+                <MudTd>@context.Amount.ToString("C")</MudTd>
+                <MudTd>@context.Description</MudTd>
+                <MudTd>@context.Date.ToShortDateString()</MudTd>
+                <MudTd>@string.Join(", ", context.Tags)</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
 </div>
 
 @code {
+    private string FilterTag { get; set; } = string.Empty;
+    private string SearchText { get; set; } = string.Empty;
+    private DateRange _dateRange = new();
+
     private IEnumerable<Transaction> TopHighestOutflows => TransactionService.GetTransactions()
         .Where(t => t.Type == TransactionsStatus.Outflow)
         .OrderByDescending(t => t.Amount)
@@ -81,4 +134,21 @@
         .Where(t => t.Type == TransactionsStatus.Outflow)
         .OrderBy(t => t.Amount)
         .Take(5);
+
+    private IEnumerable<Transaction> FilteredOutflows => TransactionService.GetTransactions()
+        .Where(t =>
+            t.Type == TransactionsStatus.Outflow &&
+            (string.IsNullOrEmpty(FilterTag) || t.Tags.Contains(FilterTag)) &&
+            (string.IsNullOrEmpty(SearchText) ||
+             t.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+             t.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) &&
+            (!_dateRange.Start.HasValue || t.Date >= _dateRange.Start.Value) &&
+            (!_dateRange.End.HasValue || t.Date <= _dateRange.End.Value));
+
+    private void ClearFilters()
+    {
+        FilterTag = string.Empty;
+        SearchText = string.Empty;
+        _dateRange = new DateRange();
+    }
 }
