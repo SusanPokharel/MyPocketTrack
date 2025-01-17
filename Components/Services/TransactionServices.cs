@@ -44,15 +44,25 @@ namespace MyPocketTrack.Components.Services
         // Add a transaction and save to file
         public async Task AddTransaction(Transaction transaction)
         {
-            if (transaction.Type == TransactionsStatus.Debt && transaction.DebtsStatus == null)
+            // Ensure the transaction is added only once
+            if (!_transactions.Contains(transaction)) 
             {
-                transaction.DebtsStatus = DebtsStatus.Pending; 
+                // Set default DebtsStatus if the transaction is a debt and DebtsStatus is null
+                if (transaction.Type == TransactionsStatus.Debt && transaction.DebtsStatus == null)
+                {
+                    transaction.DebtsStatus = DebtsStatus.Pending;
+                }
+
+                // Add transaction to the list and save
+                _transactions.Add(transaction);
+                await SaveTransactionsAsync();
             }
-            _transactions.Add(transaction);
-            await SaveTransactionsAsync();
+            else
+            {
+            }
         }
 
-        // Add a new tag and save to file
+        // Adding a new tag and save to file
         public async Task AddTag(string tag)
         {
             if (!_tags.Contains(tag))
@@ -63,23 +73,23 @@ namespace MyPocketTrack.Components.Services
         }
         
 
-        // Get top highest transactions
+        //  top highest transactions
         public IEnumerable<Transaction> GetTopHighestTransactions(int count) =>
             _transactions.OrderByDescending(t => t.Amount).Take(count);
 
-        // Get top lowest transactions
+        //  top lowest transactions
         public IEnumerable<Transaction> GetTopLowestTransactions(int count) =>
             _transactions.OrderBy(t => t.Amount).Take(count);
 
-        // Filter transactions by type
+        // Filtering transactions by type
         public IEnumerable<Transaction> FilterTransactionsByType(TransactionsStatus type) =>
             _transactions.Where(t => t.Type == type);
 
-        // Get transactions by debt status
+        //  transactions by debt status
         public IEnumerable<Transaction> GetDebtsByStatus(DebtsStatus status) =>
             _transactions.Where(t => t.Type == TransactionsStatus.Debt && t.DebtsStatus == status);
 
-// Calculated Properties
+        // Calculating Properties
         public decimal TotalInflow => _transactions.Where(t => t.Type == TransactionsStatus.Inflow).Sum(t => t.Amount);
         public int TotalInflowCount => _transactions.Count(t => t.Type == TransactionsStatus.Inflow);
 
@@ -100,7 +110,7 @@ namespace MyPocketTrack.Components.Services
         public decimal RemainingBalance =>
             Math.Max(TotalInflow - (TotalOutflow + ClearedDebt), 0);
         
-// Total transaction count
+        // Total transaction count
         public int TotalTransactionCount => _transactions.Count();
         
         
